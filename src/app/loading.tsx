@@ -1,0 +1,1 @@
+export default function Loading(){return <div className="page-wrap" aria-label="Loading VYBE"><div className="skeleton"/><p className="muted" style={{textAlign:"center"}}>Finding your next favourite moment…</p></div>}

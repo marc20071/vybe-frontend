@@ -1,0 +1,7 @@
+"use client";
+import Link from "next/link";
+import { Search, Bell, Plus, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "@/components/ui/Avatar";
+import { BrandMark } from "@/components/ui/BrandMark";
+export function Navbar(){const {user,loading}=useAuth();return <header className="topbar"><div className="topbar-inner"><Link href="/" className="brand" aria-label="VYBE home"><BrandMark /><span className="brand-word">VYBE</span></Link><label className="search-box"><Search size={17}/><input placeholder="Search anything worth finding…" aria-label="Search VYBE" onKeyDown={e=>{if(e.key==="Enter"){const input=e.currentTarget as HTMLInputElement;window.location.href=`/explore?q=${encodeURIComponent(input.value.trim())}`}}}/></label><div className="top-actions"><Link href="/notifications" className="icon-button desktop-action" aria-label="Notifications"><Bell size={18}/></Link>{loading ? <Avatar name="Loading profile" loading small /> : user?<><Link href="/upload" className="button button-primary desktop-action"><Plus size={17}/> Create</Link><Link href={`/profile/${user.username}`} aria-label="Your profile"><Avatar name={user.displayName || user.username} src={user.avatarUrl} small/></Link></>:<Link href="/login" className="button button-primary"><LogIn size={16}/> <span className="desktop-action">Sign in</span></Link>}</div></div></header>}

@@ -1,0 +1,7 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { House, Compass, Users, MessageCircle, Bookmark, Bell, Settings, Sparkles } from "lucide-react";
+const main=[{href:"/",label:"For you",icon:House},{href:"/explore",label:"Explore",icon:Compass},{href:"/following",label:"Following",icon:Users}];
+const you=[{href:"/messages",label:"Messages",icon:MessageCircle},{href:"/notifications",label:"Notifications",icon:Bell},{href:"/saved",label:"Saved moments",icon:Bookmark},{href:"/settings",label:"Settings",icon:Settings}];
+export function Sidebar(){const path=usePathname();return <aside className="sidebar"><p className="nav-label">YOUR SPACE</p><nav className="nav-list">{main.map(item=><Link key={item.href} href={item.href} className={`nav-link ${path===item.href?"active":""}`}><item.icon size={19}/><span>{item.label}</span></Link>)}</nav><p className="nav-label">YOUR WORLD</p><nav className="nav-list">{you.map(item=><Link key={item.href} href={item.href} className={`nav-link ${path===item.href||path.startsWith(item.href+"/")?"active":""}`}><item.icon size={19}/><span>{item.label}</span></Link>)}</nav><div className="sidebar-card"><div className="mini-orb"><Sparkles size={18}/></div><strong>Make room for wonder.</strong><p>Follow your curiosity. Your next favourite thing might be one scroll away.</p><Link href="/explore" className="button button-secondary" style={{width:"100%",fontSize:12}}>Explore VYBE</Link></div></aside>}

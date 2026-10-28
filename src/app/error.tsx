@@ -1,0 +1,2 @@
+"use client";
+export default function ErrorPage({reset}:{error:Error & {digest?:string};reset:()=>void}){return <div className="content-panel" role="alert"><p className="eyebrow">A LITTLE DETOUR</p><h2>That didn’t go as planned.</h2><p className="muted">Something interrupted this page. Your place on VYBE is still here.</p><button className="button button-primary" onClick={reset}>Try again</button></div>}

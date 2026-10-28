@@ -1,0 +1,5 @@
+"use client";
+import { useCallback,useEffect,useState } from "react";
+import { feedApi } from "@/services/feed-api";
+import type { Post } from "@/types/post";
+export function useFeed(mode:"for-you"|"following"="for-you"){const [items,setItems]=useState<Post[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState<string|null>(null);const [cursor,setCursor]=useState<string|undefined>();const [hasMore,setHasMore]=useState(true);const load=useCallback(async(reset=false)=>{if(!reset&&!hasMore)return;setLoading(true);setError(null);try{const result=mode==="following"?await feedApi.following(reset?undefined:cursor):await feedApi.forYou(reset?undefined:cursor);setItems(old=>reset?result.items:[...old,...result.items]);setCursor(result.nextCursor??undefined);setHasMore(Boolean(result.nextCursor))}catch(e){setError(e instanceof Error?e.message:"Could not load feed")}finally{setLoading(false)}},[mode,cursor,hasMore]);useEffect(()=>{void load(true)},[mode]);return {items,loading,error,hasMore,loadMore:()=>load(false),refresh:()=>load(true)}}

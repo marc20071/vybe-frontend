@@ -1,0 +1,2 @@
+import { apiRequest } from "@/services/api-client";
+export const reactionsApi={like:(postId:string)=>apiRequest<{liked:boolean;count:number}>(`/posts/${encodeURIComponent(postId)}/like`,{method:"PUT"}),unlike:(postId:string)=>apiRequest<{liked:boolean;count:number}>(`/posts/${encodeURIComponent(postId)}/like`,{method:"DELETE"}),save:(postId:string)=>apiRequest<void>(`/posts/${encodeURIComponent(postId)}/save`,{method:"PUT"}),unsave:(postId:string)=>apiRequest<void>(`/posts/${encodeURIComponent(postId)}/save`,{method:"DELETE"})};
