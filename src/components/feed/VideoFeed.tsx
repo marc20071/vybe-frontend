@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -31,7 +30,11 @@ function formatPostDate(date: string) {
   return new Date(date).toLocaleDateString();
 }
 
-export function VideoFeed({ initialTab = "For you" }: { initialTab?: "For you" | "Following" }) {
+export function VideoFeed({
+  initialTab = "For you",
+}: {
+  initialTab?: "For you" | "Following";
+}) {
   const [tab, setTab] = useState<"For you" | "Following">(initialTab);
   const { user, requireAuth } = useAuth();
 
@@ -73,13 +76,15 @@ export function VideoFeed({ initialTab = "For you" }: { initialTab?: "For you" |
               background: "#67e8b5",
             }}
           />
-          {tab === "Following" ? "Posts from people you follow" : "Latest posts"}
+          {tab === "Following"
+            ? "Posts from people you follow"
+            : "Latest posts"}
         </span>
       </div>
 
       {error && (
         <div className="content-panel" role="alert">
-          <p>We couldn't load your feed.</p>
+          <p>We couldn&apos;t load your feed.</p>
           <p className="muted">{error}</p>
           <button
             type="button"
@@ -141,37 +146,46 @@ export function VideoFeed({ initialTab = "For you" }: { initialTab?: "For you" |
                     minHeight: 260,
                   }}
                 >
-                  <p className="muted">Media is unavailable for this post.</p>
+                  <p className="muted">
+                    Media is unavailable for this post.
+                  </p>
                 </div>
               )}
             </div>
 
             <div className="video-side">
               <div className="creator-row">
-<Avatar name={creatorName} src={post.avatarUrl} />
+                <Avatar name={creatorName} src={post.avatarUrl} />
 
                 <div className="creator-meta">
                   <div className="creator-name">{creatorName}</div>
                   <div className="creator-handle">
                     @{username}
-                    {post.createdAt ? ` · ${formatPostDate(post.createdAt)}` : ""}
+                    {post.createdAt
+                      ? ` · ${formatPostDate(post.createdAt)}`
+                      : ""}
                   </div>
                 </div>
 
-                {user?.username?.toLowerCase() !== username.toLowerCase() && <FollowButton username={username} />}
+                {user?.username?.toLowerCase() !== username.toLowerCase() && (
+                  <FollowButton username={username} />
+                )}
               </div>
 
-              <h2 className="video-title">{post.caption || "A moment on VYBE"}</h2>
+              <h2 className="video-title">
+                {post.caption || "A moment on VYBE"}
+              </h2>
 
               <div className="video-spacer" />
-<PostActions
-  postId={post.id}
-  likes={post.likeCount}
-  comments={post.commentCount}
-  shares={0}
-  viewerHasLiked={post.viewerHasLiked}
-  viewerHasSaved={post.viewerHasSaved}
-/>
+
+              <PostActions
+                postId={post.id}
+                likes={post.likeCount}
+                comments={post.commentCount}
+                shares={0}
+                viewerHasLiked={post.viewerHasLiked}
+                viewerHasSaved={post.viewerHasSaved}
+              />
             </div>
           </article>
         );
@@ -179,7 +193,9 @@ export function VideoFeed({ initialTab = "For you" }: { initialTab?: "For you" |
 
       {!loading && !error && items.length === 0 && (
         <div className="content-panel">
-          <h3>{tab === "Following" ? "Your feed is waiting" : "No posts yet"}</h3>
+          <h3>
+            {tab === "Following" ? "Your feed is waiting" : "No posts yet"}
+          </h3>
           <p className="muted">
             {tab === "Following"
               ? "Follow creators to see their posts here."
@@ -189,11 +205,26 @@ export function VideoFeed({ initialTab = "For you" }: { initialTab?: "For you" |
       )}
 
       {loading && items.length === 0 && (
-        <div className="feed-skeleton-list" role="status" aria-label="Loading posts">
-          {Array.from({ length: 2 }, (_, index) => <div className="post-skeleton" key={index}><div className="skeleton skeleton-media" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line short" /></div>)}
+        <div
+          className="feed-skeleton-list"
+          role="status"
+          aria-label="Loading posts"
+        >
+          {Array.from({ length: 2 }, (_, index) => (
+            <div className="post-skeleton" key={index}>
+              <div className="skeleton skeleton-media" />
+              <div className="skeleton skeleton-line" />
+              <div className="skeleton skeleton-line short" />
+            </div>
+          ))}
         </div>
       )}
-      {loading && items.length > 0 && <p className="footer-note" role="status">Loading more posts…</p>}
+
+      {loading && items.length > 0 && (
+        <p className="footer-note" role="status">
+          Loading more posts…
+        </p>
+      )}
 
       {!loading && hasMore && items.length > 0 && (
         <FeedLoader loading={loading} onLoadMore={() => void loadMore()} />
