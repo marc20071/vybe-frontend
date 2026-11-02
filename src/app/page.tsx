@@ -1,11 +1,10 @@
 
 import { VideoFeed } from "@/components/feed/VideoFeed";
 import { StoryBar } from "@/components/stories/StoryBar";
-import { Sparkles } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div>
+    <div className="page-wrap home-page">
       <StoryBar />
       <VideoFeed />
     </div>
