@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
 import { useAuth } from "@/hooks/useAuth";
 import { PostActions } from "@/components/posts/PostActions";
@@ -219,6 +220,25 @@ export function VideoFeed({
       <div className="feed-right-column">
         <SuggestedAccounts creators={creators} />
       </div>
+
+      <Link
+        href="/messages"
+        className="messages-quick-access"
+        aria-label="Open messages"
+      >
+        <span className="messages-icon">
+          <MessageCircle size={23} strokeWidth={2.2} />
+        </span>
+
+        <span className="messages-text">
+          <span className="messages-title">Messages</span>
+          <span className="messages-subtitle">
+            Chat with your friends
+          </span>
+        </span>
+
+        <span className="messages-arrow">→</span>
+      </Link>
     </div>
   );
 }

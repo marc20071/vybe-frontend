@@ -341,3 +341,180 @@
     padding: 10px;
   }
 }
+
+/* VYBE desktop Messages quick access */
+.messages-quick-access {
+  position: fixed;
+  right: 28px;
+  bottom: 24px;
+  z-index: 90;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 270px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+
+  color: var(--foreground, #171717);
+  background: var(--card-background, #fff);
+  border: 1px solid var(--border-color, rgba(128, 128, 128, 0.2));
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+
+  text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.messages-quick-access:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.16);
+}
+
+.messages-quick-access .messages-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #833ab4, #c13584, #f77737);
+}
+
+.messages-quick-access .messages-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.messages-quick-access .messages-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.messages-quick-access .messages-subtitle {
+  color: var(--muted-foreground, #777);
+  font-size: 12px;
+}
+
+.messages-quick-access .messages-unread-badge {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e1306c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Hide on mobile and small tablets */
+@media (max-width: 900px) {
+  .messages-quick-access {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-quick-access {
+    transition: none;
+  }
+}
+
+/* =========================================
+   VYBE — Instagram-style Messages shortcut
+========================================= */
+
+.messages-quick-access {
+  position: fixed;
+  right: 28px;
+  bottom: 24px;
+  z-index: 90;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 270px;
+  box-sizing: border-box;
+  padding: 13px 16px;
+
+  color: var(--foreground, #171717);
+  background: var(--card-background, #fff);
+  border: 1px solid var(--border-color, rgba(128, 128, 128, 0.2));
+  border-radius: 18px;
+
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  text-decoration: none;
+
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.messages-quick-access:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.17);
+}
+
+.messages-quick-access .messages-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+
+  color: #fff;
+  background: linear-gradient(135deg, #833ab4, #c13584, #f77737);
+}
+
+.messages-quick-access .messages-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.messages-quick-access .messages-title {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.messages-quick-access .messages-subtitle {
+  color: var(--muted-foreground, #777);
+  font-size: 12px;
+}
+
+.messages-quick-access .messages-arrow {
+  margin-left: auto;
+  font-size: 20px;
+  opacity: 0.65;
+  transition: transform 180ms ease;
+}
+
+.messages-quick-access:hover .messages-arrow {
+  transform: translateX(3px);
+}
+
+/* Do not display the floating shortcut on mobile */
+@media (max-width: 900px) {
+  .messages-quick-access {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messages-quick-access,
+  .messages-quick-access .messages-arrow {
+    transition: none;
+  }
+}

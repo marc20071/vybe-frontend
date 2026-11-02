@@ -27,7 +27,6 @@ const mainLinks = [
 ];
 
 const personalLinks = [
-  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/notifications", label: "Notifications", icon: Bell },
   { href: "/saved", label: "Saved", icon: Bookmark },
 ];
