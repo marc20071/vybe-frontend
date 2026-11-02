@@ -36,11 +36,7 @@ export function AuthProvider({
 }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [prompt, setPrompt] = useState<{
-    open: boolean;
-    next: string;
-  }>({
+  const [prompt, setPrompt] = useState({
     open: false,
     next: "/",
   });
@@ -48,55 +44,70 @@ export function AuthProvider({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Restore the existing session when the application loads.
+  const closePrompt = useCallback(() => {
+    setPrompt((current) => ({
+      ...current,
+      open: false,
+    }));
+  }, []);
+
   const refreshUser = useCallback(async () => {
     try {
       const result = await authApi.me();
-      setUser(result.user);
+      setUser(result.user ?? null);
     } catch (error) {
-      // Do not erase an existing user because of a temporary API failure.
       console.error("Unable to restore authentication session:", error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Restore the session once when the application starts.
   useEffect(() => {
     void refreshUser();
   }, [refreshUser]);
 
-  // Sign in and immediately update the global authentication state.
-  const login = useCallback(async (input: LoginInput) => {
-    const result = await authApi.login(input);
+  // Never leave the guest dialog over a different route.
+  useEffect(() => {
+    closePrompt();
+  }, [pathname, closePrompt]);
 
-    if (!result.user) {
-      throw new Error("Login succeeded but no user was returned.");
-    }
+  const login = useCallback(
+    async (input: LoginInput) => {
+      const result = await authApi.login(input);
 
-    setUser(result.user);
-    setLoading(false);
-  }, []);
+      if (!result.user) {
+        throw new Error("Login succeeded but no user was returned.");
+      }
 
-  // Sign out and clear the global authentication state.
+      setUser(result.user);
+      setLoading(false);
+      closePrompt();
+    },
+    [closePrompt]
+  );
+
   const logout = useCallback(async () => {
     try {
       await authApi.logout();
     } finally {
       setUser(null);
       setLoading(false);
+      closePrompt();
       router.replace("/");
     }
-  }, [router]);
+  }, [router, closePrompt]);
 
   const requireAuth = useCallback(
     (next = pathname || "/") => {
+      // Do not prompt while checking the session or if signed in.
+      if (loading || user) return;
+
       setPrompt({
         open: true,
         next,
       });
     },
-    [pathname]
+    [loading, user, pathname]
   );
 
   const value = useMemo(
@@ -116,14 +127,9 @@ export function AuthProvider({
       {children}
 
       <GuestActionDialog
-        open={prompt.open}
+        open={prompt.open && !user && !loading}
         next={prompt.next}
-        onClose={() =>
-          setPrompt((current) => ({
-            ...current,
-            open: false,
-          }))
-        }
+        onClose={closePrompt}
       />
     </AuthContext.Provider>
   );
