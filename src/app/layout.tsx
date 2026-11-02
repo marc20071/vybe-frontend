@@ -11,7 +11,7 @@ import { PwaRegister } from "@/components/pwa/PwaRegister";
 
 export const metadata: Metadata = {
   title: {
-    default: "VYBE — Find your people",
+    default: "VYBE",
     template: "%s · VYBE",
   },
   description: "A place for the moments, people, and ideas that move you.",
