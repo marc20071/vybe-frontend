@@ -113,3 +113,231 @@
 @media (max-width: 760px) {
   .sidebar-collapse-button, .sidebar-more-wrapper { display: none; }
 }
+
+/* =====================================================
+   VYBE HOME FEED — INSTAGRAM-STYLE DESKTOP AND MOBILE
+   Keeps the existing VYBE colors, fonts and theme.
+===================================================== */
+
+/* Give the home page enough room for the desktop layout */
+.home-page {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+/* Stories align with the main feed */
+.home-page > .story-row {
+  width: 100%;
+  max-width: 620px;
+}
+
+/* Desktop: center feed + right suggestions */
+.home-feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 620px) minmax(240px, 290px);
+  justify-content: center;
+  align-items: start;
+  gap: 34px;
+  width: 100%;
+}
+
+.feed-column {
+  width: 100%;
+  min-width: 0;
+}
+
+.feed-right-column {
+  width: 100%;
+  min-width: 0;
+  position: sticky;
+  top: 100px;
+  align-self: start;
+}
+
+/* Instagram-style post: one vertical column, never a side-by-side card */
+.instagram-post {
+  display: block !important;
+  width: 100%;
+  min-width: 0;
+  padding: 0 !important;
+  margin: 0 0 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--panel);
+}
+
+/* Post author row */
+.instagram-post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  padding: 11px 14px;
+}
+
+.instagram-author {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1;
+  min-width: 0;
+}
+
+.instagram-author-meta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.instagram-author-meta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.instagram-author-meta small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Post image and video occupy the full post width */
+.instagram-post-media {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: #08080b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.instagram-post-media img,
+.instagram-post-media video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 780px;
+  height: auto;
+  object-fit: contain;
+  background: #08080b;
+}
+
+.instagram-media-unavailable {
+  width: 100%;
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Post actions and caption below the media */
+.instagram-post-content {
+  padding: 12px 14px 16px;
+  min-width: 0;
+}
+
+.instagram-post-content .engagement {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.instagram-caption {
+  margin-top: 10px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.instagram-caption strong {
+  margin-right: 5px;
+  font-weight: 700;
+}
+
+/* Smaller desktop/tablet: keep the post feed readable */
+@media (max-width: 1180px) {
+  .home-feed-layout {
+    grid-template-columns: minmax(0, 620px);
+    justify-content: center;
+  }
+
+  .feed-right-column {
+    display: none;
+  }
+}
+
+/* Mobile: full-width Instagram-style posts */
+@media (max-width: 760px) {
+  .home-page {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .home-page > .story-row {
+    max-width: 100%;
+  }
+
+  .home-feed-layout {
+    display: block;
+    width: 100%;
+  }
+
+  .feed-column {
+    width: 100%;
+  }
+
+  .feed-right-column {
+    display: none;
+  }
+
+  .instagram-post {
+    width: 100%;
+    margin-bottom: 18px;
+    border-radius: 13px;
+    padding: 0 !important;
+  }
+
+  .instagram-post-header {
+    min-height: 58px;
+    padding: 9px 11px;
+  }
+
+  .instagram-post-media {
+    width: 100%;
+  }
+
+  .instagram-post-media img,
+  .instagram-post-media video {
+    width: 100%;
+    max-height: 75vh;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .instagram-post-content {
+    padding: 11px 12px 14px;
+  }
+
+  .instagram-caption {
+    font-size: 13px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 380px) {
+  .instagram-post-header {
+    padding: 8px;
+  }
+
+  .instagram-post-content {
+    padding: 10px;
+  }
+}
