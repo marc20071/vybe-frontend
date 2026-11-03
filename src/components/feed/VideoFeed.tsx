@@ -134,15 +134,18 @@ export function VideoFeed({
                 {media?.url ? (
                   media.type === "video" ? (
                     <video
-                      key={media.url}
-                      src={media.url}
-                      poster={media.thumbnailUrl}
-                      controls
-                      playsInline
-                      preload="metadata"
-                    >
-                      Your browser does not support video playback.
-                    </video>
+  key={media.url}
+  src={media.url}
+  poster={media.thumbnailUrl}
+  controls
+  autoPlay
+  muted
+  playsInline
+  loop
+  preload="metadata"
+>
+  Your browser does not support video playback.
+</video>
                   ) : (
                     <img
                       src={media.url}
