@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -10,6 +11,7 @@ import {
   MessageCircle,
   LockKeyhole,
 } from "lucide-react";
+
 import { useAuth } from "@/hooks/useAuth";
 import { usersApi, type Profile } from "@/services/users-api";
 import type { Post } from "@/types/post";
@@ -17,34 +19,68 @@ import { FollowButton } from "@/components/profiles/FollowButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { PostActions } from "@/components/posts/PostActions";
 
-export function ProfileHeader({ username }: { username: string }) {
+type Props = {
+  username: string;
+};
+
+export function ProfileHeader({ username }: Props) {
   const clean = decodeURIComponent(username).replace(/^@/, "").toLowerCase();
   const { user } = useAuth();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [postsError, setPostsError] = useState("");
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockBusy, setBlockBusy] = useState(false);
+
+  const isOwnProfile = user?.username?.toLowerCase() === clean;
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
+    setPostsError("");
 
     try {
-      const [profileResult, postsResult] = await Promise.all([
-        usersApi.profile(clean),
-        usersApi.posts(clean),
-      ]);
+      // Load the profile independently so a private-posts error
+      // cannot prevent the profile itself from appearing.
+      const profileResult = await usersApi.profile(clean);
+      const loadedProfile = profileResult.user;
 
-      setProfile(profileResult.user);
-      setPosts(postsResult.items);
+      setProfile(loadedProfile);
+
+      // Do not request private content when the API has already
+      // indicated that this viewer cannot access it.
+      if (loadedProfile.privateContent) {
+        setPosts([]);
+        setLoading(false);
+        return;
+      }
+
+      setPostsLoading(true);
+
+      try {
+        const postsResult = await usersApi.posts(clean);
+        setPosts(postsResult.items ?? []);
+      } catch (err) {
+        setPosts([]);
+        setPostsError(
+          err instanceof Error
+            ? err.message
+            : "Could not load this creator's posts."
+        );
+      } finally {
+        setPostsLoading(false);
+      }
     } catch (err) {
+      setProfile(null);
+      setPosts([]);
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn&apos;t load this profile."
+          : "Could not load this profile."
       );
     } finally {
       setLoading(false);
@@ -58,7 +94,7 @@ export function ProfileHeader({ username }: { username: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    if (!user || user.username.toLowerCase() === clean) {
+    if (!user || isOwnProfile) {
       setIsBlocked(false);
       return;
     }
@@ -79,7 +115,7 @@ export function ProfileHeader({ username }: { username: string }) {
     return () => {
       cancelled = true;
     };
-  }, [user, clean]);
+  }, [user, clean, isOwnProfile]);
 
   async function toggleBlock() {
     if (!user || blockBusy) return;
@@ -98,20 +134,17 @@ export function ProfileHeader({ username }: { username: string }) {
     try {
       if (isBlocked) {
         await usersApi.unblockUser(clean);
+        setIsBlocked(false);
       } else {
         await usersApi.blockUser(clean);
-      }
-
-      setIsBlocked(!isBlocked);
-
-      if (!isBlocked) {
-        await load();
+        setIsBlocked(true);
+        setPosts([]);
       }
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn&apos;t update this account&apos;s block status."
+          : "Could not update this account's block status."
       );
     } finally {
       setBlockBusy(false);
@@ -141,14 +174,20 @@ export function ProfileHeader({ username }: { username: string }) {
   if (error && !profile) {
     return (
       <section className="content-panel" role="alert">
-        <h1>Couldn&apos;t load profile</h1>
+        <h1>Could not load profile</h1>
         <p className="muted">{error}</p>
+
         <button
           type="button"
           className="button button-secondary"
           onClick={() => void load()}
+          disabled={loading}
         >
-          <RefreshCw size={15} />
+          {loading ? (
+            <LoaderCircle size={15} className="animate-spin" />
+          ) : (
+            <RefreshCw size={15} />
+          )}
           Try again
         </button>
       </section>
@@ -169,13 +208,14 @@ export function ProfileHeader({ username }: { username: string }) {
     );
   }
 
-  const isOwnProfile = user?.username?.toLowerCase() === clean;
+  const profileUrl = `/profile/${encodeURIComponent(profile.username)}`;
+  const canShowPosts = !profile.privateContent && !isBlocked;
 
   return (
     <>
       <section className="profile-hero">
         <Link
-          href={`/profile/${encodeURIComponent(profile.username)}`}
+          href={profileUrl}
           className="profile-avatar-link"
           aria-label={`Open @${profile.username} profile`}
         >
@@ -191,7 +231,7 @@ export function ProfileHeader({ username }: { username: string }) {
           <p className="eyebrow">CREATOR PROFILE</p>
 
           <h1 className="page-title" style={{ margin: "5px 0" }}>
-            <Link href={`/profile/${encodeURIComponent(profile.username)}`}>
+            <Link href={profileUrl}>
               {profile.displayName || profile.username}
             </Link>
           </h1>
@@ -204,11 +244,10 @@ export function ProfileHeader({ username }: { username: string }) {
               display: "flex",
               alignItems: "center",
               gap: 6,
+              flexWrap: "wrap",
             }}
           >
-            <Link href={`/profile/${encodeURIComponent(profile.username)}`}>
-              @{profile.username}
-            </Link>
+            <Link href={profileUrl}>@{profile.username}</Link>
 
             {profile.isPrivate && (
               <span className="private-profile-label">
@@ -218,16 +257,20 @@ export function ProfileHeader({ username }: { username: string }) {
             )}
           </p>
 
-          {profile.bio && <p className="profile-bio">{profile.bio}</p>}
+          {profile.bio && (
+            <p className="profile-bio">{profile.bio}</p>
+          )}
 
           <div className="profile-stats" aria-label="Profile statistics">
             <span>
               <strong>{profile.postCount.toLocaleString()}</strong> posts
             </span>
+
             <span>
               <strong>{profile.followerCount.toLocaleString()}</strong>{" "}
               followers
             </span>
+
             <span>
               <strong>{profile.followingCount.toLocaleString()}</strong>{" "}
               following
@@ -242,15 +285,20 @@ export function ProfileHeader({ username }: { username: string }) {
             </Link>
           ) : (
             <>
-              <FollowButton username={clean} onChanged={() => void load()} />
+              <FollowButton
+                username={clean}
+                onChanged={() => void load()}
+              />
 
-              <Link
-                href={`/messages?to=${encodeURIComponent(profile.username)}`}
-                className="button button-secondary"
-              >
-                <MessageCircle size={15} />
-                Message
-              </Link>
+              {!isBlocked && (
+                <Link
+                  href={`/messages?to=${encodeURIComponent(profile.username)}`}
+                  className="button button-secondary"
+                >
+                  <MessageCircle size={15} />
+                  Message
+                </Link>
+              )}
 
               {user && (
                 <button
@@ -266,6 +314,7 @@ export function ProfileHeader({ username }: { username: string }) {
                   ) : (
                     <ShieldBan size={15} />
                   )}
+
                   {isBlocked ? "Unblock" : "Block"}
                 </button>
               )}
@@ -278,7 +327,12 @@ export function ProfileHeader({ username }: { username: string }) {
         <div className="feed-tabs">
           <span className="feed-tab active">Posts</span>
         </div>
-        <span className="feed-note">{posts.length} recent posts</span>
+
+        <span className="feed-note">
+          {profile.privateContent
+            ? "Private posts"
+            : `${posts.length} recent posts`}
+        </span>
       </div>
 
       {error && (
@@ -290,7 +344,17 @@ export function ProfileHeader({ username }: { username: string }) {
         </p>
       )}
 
-      {loading && (
+      {isBlocked && (
+        <div className="empty-state">
+          <ShieldBan size={30} />
+          <h2>You&apos;ve blocked this account</h2>
+          <p className="muted">
+            Unblock this creator to interact with their profile again.
+          </p>
+        </div>
+      )}
+
+      {canShowPosts && postsLoading && (
         <div
           className="profile-post-skeletons"
           role="status"
@@ -305,7 +369,21 @@ export function ProfileHeader({ username }: { username: string }) {
         </div>
       )}
 
-      {!loading && posts.length === 0 && (
+      {canShowPosts && postsError && (
+        <div className="content-panel" role="alert">
+          <p className="muted">{postsError}</p>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => void load()}
+          >
+            <RefreshCw size={15} />
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!isBlocked && !postsLoading && !postsError && posts.length === 0 && (
         <div className="empty-state">
           {profile.privateContent ? (
             <>
@@ -322,11 +400,13 @@ export function ProfileHeader({ username }: { username: string }) {
               <h2 style={{ fontFamily: "Space Grotesk" }}>
                 {isOwnProfile ? "Your first post starts here" : "No posts yet"}
               </h2>
+
               <p className="muted">
                 {isOwnProfile
                   ? "Share a photo or video and it will appear on your profile."
-                  : "This creator hasn&apos;t shared any public posts yet."}
+                  : "This creator hasn't shared any public posts yet."}
               </p>
+
               {isOwnProfile && (
                 <Link href="/upload" className="button button-primary">
                   Create a post
@@ -337,18 +417,25 @@ export function ProfileHeader({ username }: { username: string }) {
         </div>
       )}
 
-      {!loading &&
+      {!isBlocked &&
+        !postsLoading &&
         posts.map((post) => {
           const media = post.media?.[0];
 
           return (
-            <article className="profile-post content-panel" key={post.id}>
+            <article
+              className="profile-post content-panel"
+              key={post.id}
+            >
               <div className="creator-row">
                 <Link
                   href={`/profile/${encodeURIComponent(post.username)}`}
                   aria-label={`Open @${post.username} profile`}
                 >
-                  <Avatar name={post.displayName} src={post.avatarUrl} />
+                  <Avatar
+                    name={post.displayName || post.username}
+                    src={post.avatarUrl}
+                  />
                 </Link>
 
                 <div className="creator-meta">
@@ -364,8 +451,9 @@ export function ProfileHeader({ username }: { username: string }) {
                       href={`/profile/${encodeURIComponent(post.username)}`}
                     >
                       @{post.username}
-                    </Link>{" "}
-                    · {new Date(post.createdAt).toLocaleDateString()}
+                    </Link>
+                    {" · "}
+                    {new Date(post.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               </div>
@@ -401,7 +489,9 @@ export function ProfileHeader({ username }: { username: string }) {
                 viewerHasSaved={post.viewerHasSaved}
                 authorId={post.userId}
                 onDeleted={(id) =>
-                  setPosts((items) => items.filter((item) => item.id !== id))
+                  setPosts((items) =>
+                    items.filter((item) => item.id !== id)
+                  )
                 }
               />
             </article>

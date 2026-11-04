@@ -990,3 +990,728 @@
   }
 }
 
+/* ==========================================================
+   VYBE RESPONSIVE FEATURE SUPPORT — CONSOLIDATED OVERRIDES
+   Append-only overrides; preserve the existing VYBE theme.
+   These styles support UI states; application/API logic still
+   belongs in the React components and backend.
+========================================================== */
+
+:root {
+  --vybe-chat-bg: #101b21;
+  --vybe-chat-panel: #202c33;
+  --vybe-chat-line: #2a3942;
+  --vybe-chat-muted: #8696a0;
+  --vybe-chat-text: #e9edef;
+  --vybe-focus: #b9a5ff;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--vybe-focus);
+  outline-offset: 2px;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+.main-content,
+.page-wrap,
+.home-page,
+.home-feed-layout,
+.feed-column,
+.profile-main-column {
+  min-width: 0;
+}
+
+/* Feed: natural post height, full controls and readable captions. */
+.instagram-post {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible;
+}
+
+.instagram-post-media {
+  height: auto !important;
+  max-height: none !important;
+}
+
+.instagram-post-media img,
+.instagram-post-media video {
+  height: auto;
+  max-height: min(78dvh, 900px);
+  object-fit: contain;
+  object-position: center;
+}
+
+.instagram-post-content,
+.instagram-caption {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.instagram-post-header > :last-child {
+  flex-shrink: 0;
+}
+
+.instagram-post-header .compact-follow-button {
+  min-height: 28px;
+  padding: 4px 9px;
+  font-size: 11px;
+}
+
+/* Profile: suggestions beside the profile, not below it. */
+.profile-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 24px;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+.profile-main-column {
+  min-width: 0;
+}
+
+.profile-right-column {
+  display: block;
+  min-width: 0;
+  position: sticky;
+  top: 96px;
+  align-self: start;
+}
+
+.profile-right-column > * {
+  min-width: 0;
+}
+
+.profile-right-column .suggested-accounts,
+.profile-right-column .suggested-accounts-panel {
+  width: 100%;
+  max-width: 100%;
+}
+
+.profile-hero {
+  min-width: 0;
+}
+
+.profile-identity,
+.profile-actions {
+  min-width: 0;
+}
+
+.compact-follow-button {
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.compact-follow-button:hover {
+  transform: none;
+  filter: brightness(1.08);
+}
+
+/* Desktop messages: keep a visible icon rail beside the full inbox. */
+.app-shell:has(.chat-fullscreen) {
+  grid-template-columns: 78px minmax(0, 1fr) !important;
+  gap: 18px !important;
+  padding-inline: 18px !important;
+}
+
+.app-shell:has(.chat-fullscreen) > .sidebar {
+  width: 78px !important;
+  min-width: 78px;
+  height: calc(100dvh - 120px);
+  overflow: visible;
+  visibility: visible !important;
+}
+
+.app-shell:has(.chat-fullscreen) > .sidebar .nav-link {
+  justify-content: center;
+  padding: 13px 8px;
+}
+
+.app-shell:has(.chat-fullscreen) > .sidebar .nav-link span,
+.app-shell:has(.chat-fullscreen) > .sidebar .nav-label,
+.app-shell:has(.chat-fullscreen) > .sidebar .sidebar-card {
+  display: none;
+}
+
+.app-shell:has(.chat-fullscreen) .main-content {
+  min-width: 0;
+}
+
+.chat-fullscreen {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: calc(100dvh - 112px);
+  max-height: calc(100dvh - 112px);
+  overflow: hidden;
+}
+
+.chat-fullscreen-sidebar,
+.chat-fullscreen-main {
+  min-width: 0;
+  min-height: 0;
+}
+
+.chat-fullscreen-list,
+.chat-fullscreen-messages {
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #59656b transparent;
+}
+
+.chat-fullscreen-row {
+  min-width: 0;
+}
+
+.chat-fullscreen-row-copy {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chat-fullscreen-header,
+.chat-fullscreen-compose {
+  flex-shrink: 0;
+}
+
+.chat-fullscreen-compose {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.chat-fullscreen-compose input,
+.chat-fullscreen-search input,
+.group-create-form input,
+.group-tools input {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chat-unread-badge,
+.vybe-floating-chat-badge,
+.messages-quick-unread {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Message content: attachments, voice notes, reactions and replies. */
+.chat-attachment-image,
+.chat-attachment-video {
+  max-width: min(100%, 420px);
+  max-height: min(52dvh, 440px);
+  object-fit: contain;
+}
+
+.chat-voice-player,
+.voice-note-preview audio {
+  width: min(300px, 100%);
+  max-width: 100%;
+}
+
+.voice-note-preview,
+.reply-compose-preview,
+.voice-recording-status {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.voice-note-preview-actions,
+.group-tools-actions,
+.notification-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.message-reaction-list {
+  max-width: 100%;
+}
+
+.reaction-picker {
+  max-width: min(260px, calc(100vw - 32px));
+  flex-wrap: wrap;
+}
+
+.message-hover-actions {
+  z-index: 5;
+}
+
+.chat-fullscreen-messages .chat-message-row {
+  min-width: 0;
+}
+
+.chat-fullscreen-messages .chat-bubble {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chat-fullscreen-messages .chat-bubble img,
+.chat-fullscreen-messages .chat-bubble video {
+  max-width: 100%;
+}
+
+.chat-fullscreen-messages .chat-bubble audio {
+  width: min(280px, 100%);
+  max-width: 100%;
+}
+
+/* Group administration, call controls and status feedback. */
+.group-create-form,
+.group-tools {
+  min-width: 0;
+}
+
+.group-tools form input {
+  flex: 1 1 140px;
+}
+
+.call-overlay {
+  padding: max(10px, env(safe-area-inset-top)) 12px
+    max(10px, env(safe-area-inset-bottom));
+}
+
+.call-window {
+  width: min(920px, 100%);
+  max-height: 96dvh;
+  overflow: auto;
+}
+
+.call-video-grid {
+  min-width: 0;
+}
+
+.call-remote-video,
+.call-local-video {
+  max-width: 100%;
+}
+
+.call-controls {
+  flex-wrap: wrap;
+}
+
+.private-profile-label,
+.chat-typing-indicator {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Floating desktop inbox: use the same VYBE dark theme. */
+.floating-chat-root,
+.vybe-floating-chat {
+  color-scheme: dark;
+}
+
+.floating-chat-panel {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 110px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.floating-chat-panel,
+.vybe-floating-chat {
+  background: #17171f;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.floating-chat-panel input,
+.floating-chat-panel textarea,
+.vybe-floating-chat input {
+  background: #111116;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.floating-chat-panel button,
+.vybe-floating-chat button {
+  max-width: 100%;
+}
+
+.floating-chat-panel img,
+.floating-chat-panel video {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Notifications, requests, search and privacy states. */
+.notification-row,
+.notification-request-row,
+.creator-result {
+  min-width: 0;
+}
+
+.notification-copy,
+.notification-request-copy,
+.creator-result-main {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.notification-row:focus-visible,
+.creator-result-main:focus-visible {
+  outline-offset: -2px;
+}
+
+.explore-search input,
+.search-box input {
+  min-width: 0;
+}
+
+/* Mobile navigation: keep the actual Sidebar links available.
+   This replaces the desktop vertical rail with a compact bottom rail. */
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+    padding: 14px 0 calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell > .sidebar {
+    position: fixed;
+    z-index: 80;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    display: flex !important;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    width: 100%;
+    height: auto;
+    min-height: 58px;
+    padding: 6px 5px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: rgba(20, 20, 25, .97);
+    backdrop-filter: blur(18px);
+  }
+
+  .app-shell > .sidebar .sidebar-collapse-button,
+  .app-shell > .sidebar .sidebar-card,
+  .app-shell > .sidebar .nav-label {
+    display: none !important;
+  }
+
+  .app-shell > .sidebar .nav-list {
+    display: contents;
+  }
+
+  .app-shell > .sidebar .sidebar-section {
+    display: contents;
+  }
+
+  .app-shell > .sidebar .nav-link,
+  .app-shell > .sidebar .sidebar-more-button {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 48px;
+    padding: 5px 2px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #aaa7b7;
+    font-size: 9px;
+  }
+
+  .app-shell > .sidebar .nav-link span,
+  .app-shell > .sidebar .sidebar-more-button span {
+    display: block !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+  }
+
+  .app-shell > .sidebar .nav-link svg,
+  .app-shell > .sidebar .sidebar-more-button svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .app-shell > .sidebar .sidebar-more-wrapper {
+    display: flex;
+    flex: 1 1 0;
+    align-items: stretch;
+    margin: 0;
+  }
+
+  .app-shell > .sidebar .sidebar-more-button {
+    width: 100%;
+  }
+
+  .app-shell:has(.chat-fullscreen) {
+    display: block;
+    padding: 8px 8px calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell:has(.chat-fullscreen) > .sidebar {
+    width: 100% !important;
+    min-width: 0;
+    height: auto;
+    visibility: visible !important;
+    overflow: visible;
+  }
+
+  .chat-fullscreen {
+    height: calc(100dvh - 150px);
+    max-height: calc(100dvh - 150px);
+    min-height: 0;
+    border-radius: 12px;
+  }
+
+  .chat-fullscreen-sidebar {
+    min-height: 0;
+  }
+
+  .chat-fullscreen-main.is-chat {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 0;
+  }
+
+  .chat-fullscreen-main.is-list {
+    display: none !important;
+  }
+
+  .chat-fullscreen-messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 9px;
+  }
+
+  .chat-fullscreen-header {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
+  .chat-fullscreen-compose {
+    gap: 6px;
+    padding: 8px;
+    padding-bottom: max(9px, env(safe-area-inset-bottom));
+  }
+
+  .chat-fullscreen-compose input {
+    min-width: 0;
+    padding: 11px 12px;
+  }
+
+  .chat-fullscreen-compose .button {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .chat-attachment-image,
+  .chat-attachment-video {
+    max-width: min(100%, 300px);
+    max-height: 42dvh;
+  }
+
+  .chat-bubble {
+    max-width: 90%;
+  }
+
+  .call-window {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    border-radius: 14px;
+  }
+
+  .call-video-grid {
+    height: 54dvh;
+    min-height: 220px;
+  }
+
+  .profile-page-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .profile-right-column {
+    display: none;
+  }
+
+  .home-feed-layout {
+    display: block;
+  }
+
+  .feed-right-column {
+    display: none;
+  }
+
+  .instagram-post-media img,
+  .instagram-post-media video {
+    max-height: 72dvh;
+  }
+
+  /* Quick inbox and its shortcut are desktop-only by requirement. */
+  .messages-quick-access,
+  .floating-chat-root,
+  .vybe-floating-chat {
+    display: none !important;
+  }
+
+  /* Avoid a second navigation bar if an older mobile-bottom component exists. */
+  .mobile-bottom {
+    display: none !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  .profile-page-layout {
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 18px;
+  }
+
+  .home-feed-layout {
+    grid-template-columns: minmax(0, 620px) minmax(220px, 250px);
+    gap: 22px;
+  }
+}
+
+@media (max-width: 560px) {
+  .profile-hero {
+    gap: 12px;
+  }
+
+  .profile-stats {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+  }
+
+  .profile-actions {
+    margin-left: 0;
+  }
+
+  .settings-panel,
+  .content-panel {
+    padding: 16px;
+  }
+
+  .notification-request-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .notification-request-actions {
+    width: 100%;
+    padding-left: 52px;
+  }
+
+  .group-tools form,
+  .group-tools-actions {
+    width: 100%;
+  }
+
+  .group-tools-actions .button {
+    flex: 1 1 auto;
+  }
+
+  .chat-call-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .instagram-post-header {
+    gap: 7px;
+  }
+
+  .instagram-author {
+    gap: 7px;
+  }
+
+  .instagram-author-meta strong {
+    max-width: 150px;
+  }
+
+  .compact-follow-button {
+    min-height: 26px;
+    padding: 3px 7px;
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* VYBE profile page layout */
+.profile-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 24px;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+.profile-main-column {
+  min-width: 0;
+  width: 100%;
+}
+
+.profile-right-column {
+  min-width: 0;
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+
+@media (max-width: 1050px) {
+  .profile-page-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profile-right-column {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-page-layout {
+    gap: 16px;
+  }
+}
+
