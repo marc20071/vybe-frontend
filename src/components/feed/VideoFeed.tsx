@@ -3,7 +3,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
 import { useFeed } from "@/hooks/useFeed";
 import { useAuth } from "@/hooks/useAuth";
 import { PostActions } from "@/components/posts/PostActions";
@@ -11,12 +10,17 @@ import { FeedLoader } from "@/components/feed/FeedLoader";
 import { Avatar } from "@/components/ui/Avatar";
 import { FollowButton } from "@/components/profiles/FollowButton";
 import { SuggestedAccounts } from "@/components/layout/SuggestedAccounts";
+import { FloatingChat } from "@/components/messaging/FloatingChat";
 
 function formatPostDate(date: string) {
   const timestamp = new Date(date).getTime();
+
   if (Number.isNaN(timestamp)) return "";
 
-  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
+  const minutes = Math.max(
+    0,
+    Math.floor((Date.now() - timestamp) / 60000)
+  );
 
   if (minutes < 1) return "Just now";
   if (minutes < 60) return `${minutes}m ago`;
@@ -39,7 +43,15 @@ export function VideoFeed({
   const { user, requireAuth } = useAuth();
 
   const mode = tab === "Following" ? "following" : "for-you";
-  const { items, loading, error, hasMore, loadMore, refresh } = useFeed(mode);
+
+  const {
+    items,
+    loading,
+    error,
+    hasMore,
+    loadMore,
+    refresh,
+  } = useFeed(mode);
 
   const creators = useMemo(
     () =>
@@ -47,7 +59,8 @@ export function VideoFeed({
         .filter((post) => Boolean(post.username))
         .map((post) => ({
           username: post.username || "",
-          displayName: post.displayName || post.username || "VYBE creator",
+          displayName:
+            post.displayName || post.username || "VYBE creator",
           avatarUrl: post.avatarUrl,
         })),
     [items]
@@ -58,6 +71,7 @@ export function VideoFeed({
       requireAuth("/following");
       return;
     }
+
     setTab(nextTab);
   }
 
@@ -90,6 +104,7 @@ export function VideoFeed({
           <div className="content-panel" role="alert">
             <p>We couldn&apos;t load your feed.</p>
             <p className="muted">{error}</p>
+
             <button
               type="button"
               className="button button-secondary"
@@ -107,13 +122,21 @@ export function VideoFeed({
           const username = post.username || "user";
 
           return (
-            <article className="video-card instagram-post" key={post.id}>
+            <article
+              className="video-card instagram-post"
+              key={post.id}
+            >
               <header className="instagram-post-header">
                 <Link
-                  href={`/profile/${username}`}
+                  href={`/profile/${encodeURIComponent(username)}`}
                   className="instagram-author"
                 >
-                  <Avatar name={creatorName} src={post.avatarUrl} size={42} />
+                  <Avatar
+                    name={creatorName}
+                    src={post.avatarUrl}
+                    size={42}
+                  />
+
                   <span className="instagram-author-meta">
                     <strong>{creatorName}</strong>
                     <small>
@@ -125,7 +148,8 @@ export function VideoFeed({
                   </span>
                 </Link>
 
-                {user?.username?.toLowerCase() !== username.toLowerCase() && (
+                {user?.username?.toLowerCase() !==
+                  username.toLowerCase() && (
                   <FollowButton username={username} />
                 )}
               </header>
@@ -134,28 +158,34 @@ export function VideoFeed({
                 {media?.url ? (
                   media.type === "video" ? (
                     <video
-  key={media.url}
-  src={media.url}
-  poster={media.thumbnailUrl}
-  controls
-  autoPlay
-  muted
-  playsInline
-  loop
-  preload="metadata"
->
-  Your browser does not support video playback.
-</video>
+                      key={media.url}
+                      src={media.url}
+                      poster={media.thumbnailUrl}
+                      controls
+                      autoPlay
+                      muted
+                      playsInline
+                      loop
+                      preload="metadata"
+                    >
+                      Your browser does not support video playback.
+                    </video>
                   ) : (
                     <img
                       src={media.url}
-                      alt={media.altText || post.caption || "VYBE post"}
+                      alt={
+                        media.altText ||
+                        post.caption ||
+                        "VYBE post"
+                      }
                       loading="lazy"
                     />
                   )
                 ) : (
                   <div className="instagram-media-unavailable">
-                    <span>Media is unavailable for this post.</span>
+                    <span>
+                      Media is unavailable for this post.
+                    </span>
                   </div>
                 )}
               </div>
@@ -171,7 +201,9 @@ export function VideoFeed({
                 />
 
                 <div className="instagram-caption">
-                  <Link href={`/profile/${username}`}>
+                  <Link
+                    href={`/profile/${encodeURIComponent(username)}`}
+                  >
                     <strong>{username}</strong>
                   </Link>{" "}
                   {post.caption || "A moment on VYBE."}
@@ -184,14 +216,21 @@ export function VideoFeed({
         {!loading && !error && items.length === 0 && (
           <div className="content-panel">
             <h3>
-              {tab === "Following" ? "Your feed is waiting" : "No posts yet"}
+              {tab === "Following"
+                ? "Your feed is waiting"
+                : "No posts yet"}
             </h3>
+
             <p className="muted">
               {tab === "Following"
                 ? "Follow creators to see their posts here."
                 : "Be among the first to share a moment on VYBE."}
             </p>
-            <Link href="/explore" className="button button-secondary">
+
+            <Link
+              href="/explore"
+              className="button button-secondary"
+            >
               Discover creators
             </Link>
           </div>
@@ -216,7 +255,10 @@ export function VideoFeed({
         )}
 
         {!loading && hasMore && items.length > 0 && (
-          <FeedLoader loading={loading} onLoadMore={() => void loadMore()} />
+          <FeedLoader
+            loading={loading}
+            onLoadMore={() => void loadMore()}
+          />
         )}
       </section>
 
@@ -224,24 +266,7 @@ export function VideoFeed({
         <SuggestedAccounts creators={creators} />
       </div>
 
-      <Link
-        href="/messages"
-        className="messages-quick-access"
-        aria-label="Open messages"
-      >
-        <span className="messages-icon">
-          <MessageCircle size={23} strokeWidth={2.2} />
-        </span>
-
-        <span className="messages-text">
-          <span className="messages-title">Messages</span>
-          <span className="messages-subtitle">
-            Chat with your friends
-          </span>
-        </span>
-
-        <span className="messages-arrow">→</span>
-      </Link>
+      <FloatingChat />
     </div>
   );
 }

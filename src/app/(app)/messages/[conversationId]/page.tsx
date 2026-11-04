@@ -1,6 +1,13 @@
+
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -19,14 +26,21 @@ import {
   Users,
   X,
 } from "lucide-react";
+
 import { useAuth } from "@/hooks/useAuth";
-import { messagesApi, type Message, type Conversation } from "@/services/messages-api";
+import {
+  messagesApi,
+  type Message,
+  type Conversation,
+} from "@/services/messages-api";
 import { Avatar } from "@/components/ui/Avatar";
 import { CallPanel } from "@/components/messaging/CallPanel";
 
 const QUICK_REACTIONS = ["❤️", "👍", "😂", "😮", "😢", "🙏"];
 
-function attachmentType(file: File): "image" | "video" | "file" | "voice" {
+function attachmentType(
+  file: File
+): "image" | "video" | "file" | "voice" {
   if (file.type.startsWith("image/")) return "image";
   if (file.type.startsWith("video/")) return "video";
   if (file.type.startsWith("audio/")) return "voice";
@@ -41,7 +55,8 @@ export default function ConversationPage() {
 
   const [items, setItems] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [conversation, setConversation] =
+    useState<Conversation | null>(null);
 
   const [message, setMessage] = useState("");
   const [voicePreview, setVoicePreview] = useState<File | null>(null);
@@ -66,6 +81,7 @@ export default function ConversationPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const recordChunks = useRef<Blob[]>([]);
+  const recordingStream = useRef<MediaStream | null>(null);
 
   const load = useCallback(
     async (showLoading = true, refreshConversations = true) => {
@@ -126,7 +142,12 @@ export default function ConversationPage() {
     let loadingMessages = false;
 
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== "visible" || loadingMessages) return;
+      if (
+        document.visibilityState !== "visible" ||
+        loadingMessages
+      ) {
+        return;
+      }
 
       loadingMessages = true;
 
@@ -152,7 +173,9 @@ export default function ConversationPage() {
         window.clearTimeout(typingTimer.current);
       }
 
-      void messagesApi.setTyping(conversationId, false).catch(() => undefined);
+      void messagesApi
+        .setTyping(conversationId, false)
+        .catch(() => undefined);
     };
   }, [user, conversationId, load]);
 
@@ -166,12 +189,36 @@ export default function ConversationPage() {
     return () => window.clearInterval(timer);
   }, [recording]);
 
+  useEffect(() => {
+    return () => {
+      const activeRecorder = recorder.current;
+
+      if (activeRecorder && activeRecorder.state !== "inactive") {
+        activeRecorder.stop();
+      }
+
+      recordingStream.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
+      if (typingTimer.current) {
+        window.clearTimeout(typingTimer.current);
+      }
+
+      void messagesApi
+        .setTyping(conversationId, false)
+        .catch(() => undefined);
+    };
+  }, [conversationId]);
+
   function handleMessageChange(value: string) {
     setMessage(value);
 
     if (!typingActive.current) {
       typingActive.current = true;
-      void messagesApi.setTyping(conversationId, true).catch(() => undefined);
+      void messagesApi
+        .setTyping(conversationId, true)
+        .catch(() => undefined);
     }
 
     if (typingTimer.current) {
@@ -180,11 +227,13 @@ export default function ConversationPage() {
 
     typingTimer.current = window.setTimeout(() => {
       typingActive.current = false;
-      void messagesApi.setTyping(conversationId, false).catch(() => undefined);
+      void messagesApi
+        .setTyping(conversationId, false)
+        .catch(() => undefined);
     }, 1800);
   }
 
-  async function sendMessage(event: React.FormEvent<HTMLFormElement>) {
+  async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!user) {
@@ -196,7 +245,9 @@ export default function ConversationPage() {
 
     const body = replyTo
       ? `↪ Replying to ${
-          replyTo.senderId === user.id ? "your message" : "message"
+          replyTo.senderId === user.id
+            ? "your message"
+            : "message"
         }: ${replyTo.body.slice(0, 180)}\n\n${typedBody}`
       : typedBody;
 
@@ -216,12 +267,16 @@ export default function ConversationPage() {
         window.clearTimeout(typingTimer.current);
       }
 
-      void messagesApi.setTyping(conversationId, false).catch(() => undefined);
+      void messagesApi
+        .setTyping(conversationId, false)
+        .catch(() => undefined);
 
       await load(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Message was not sent. Try again."
+        err instanceof Error
+          ? err.message
+          : "Message was not sent. Try again."
       );
     } finally {
       setSending(false);
@@ -238,13 +293,24 @@ export default function ConversationPage() {
     setError("");
 
     try {
-      const uploaded = await messagesApi.uploadAttachment(conversationId, file);
-      await messagesApi.sendAttachment(conversationId, uploaded, type);
+      const uploaded = await messagesApi.uploadAttachment(
+        conversationId,
+        file
+      );
+
+      await messagesApi.sendAttachment(
+        conversationId,
+        uploaded,
+        type
+      );
+
       await load(false);
       return true;
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Attachment could not be sent."
+        err instanceof Error
+          ? err.message
+          : "Attachment could not be sent."
       );
       return false;
     } finally {
@@ -270,7 +336,10 @@ export default function ConversationPage() {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream =
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      recordingStream.current = stream;
 
       let mimeType = "";
 
@@ -302,7 +371,10 @@ export default function ConversationPage() {
 
       mediaRecorder.onerror = () => {
         stream.getTracks().forEach((track) => track.stop());
+        recordingStream.current = null;
+        recorder.current = null;
         setRecording(false);
+
         setError(
           "The browser could not record audio. Check microphone permissions and try again."
         );
@@ -310,12 +382,14 @@ export default function ConversationPage() {
 
       mediaRecorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
+        recordingStream.current = null;
 
         const blob = new Blob(recordChunks.current, {
           type: mediaRecorder.mimeType || "audio/webm",
         });
 
         recordChunks.current = [];
+        recorder.current = null;
 
         if (blob.size > 0) {
           const extension = blob.type.includes("ogg")
@@ -341,6 +415,11 @@ export default function ConversationPage() {
       mediaRecorder.start(250);
       setRecording(true);
     } catch (err) {
+      recordingStream.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
+      recordingStream.current = null;
       setRecording(false);
 
       setError(
@@ -353,11 +432,17 @@ export default function ConversationPage() {
 
   function stopRecording() {
     const active = recorder.current;
-    recorder.current = null;
+
     setRecording(false);
 
     if (active && active.state !== "inactive") {
       active.stop();
+    } else {
+      recordingStream.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
+      recordingStream.current = null;
     }
   }
 
@@ -377,7 +462,9 @@ export default function ConversationPage() {
       await load(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Couldn't react to this message."
+        err instanceof Error
+          ? err.message
+          : "Couldn't react to this message."
       );
     }
   }
@@ -390,7 +477,9 @@ export default function ConversationPage() {
       await load(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Couldn't unsend this message."
+        err instanceof Error
+          ? err.message
+          : "Couldn't unsend this message."
       );
     }
   }
@@ -435,7 +524,11 @@ export default function ConversationPage() {
         setMemberUsername("");
         setError("Member added.");
       } else if (action === "clear") {
-        if (!window.confirm("Clear the group history for your account?")) {
+        if (
+          !window.confirm(
+            "Clear the group history for your account?"
+          )
+        ) {
           return;
         }
 
@@ -465,7 +558,9 @@ export default function ConversationPage() {
       await load(false);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Group action failed."
+        err instanceof Error
+          ? err.message
+          : "Group action failed."
       );
     } finally {
       setActionBusy(false);
@@ -474,11 +569,10 @@ export default function ConversationPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="page-wrap">
-        <section className="content-panel" role="status">
+      <div className="messages-workspace">
+        <section className="content-panel conversation-loading">
+          <LoaderCircle size={23} className="animate-spin" />
           <p>Opening your conversation…</p>
-          <div className="skeleton skeleton-line" />
-          <div className="skeleton skeleton-media" />
         </section>
       </div>
     );
@@ -486,15 +580,19 @@ export default function ConversationPage() {
 
   if (!user) {
     return (
-      <div className="page-wrap">
-        <h1 className="page-title">Private messages</h1>
-        <p>Sign in to open this conversation.</p>
-        <button
-          className="button button-primary"
-          onClick={() => requireAuth(`/messages/${conversationId}`)}
-        >
-          Sign in
-        </button>
+      <div className="messages-workspace">
+        <section className="empty-state">
+          <h1>Private messages</h1>
+          <p>Sign in to open this conversation.</p>
+          <button
+            className="button button-primary"
+            onClick={() =>
+              requireAuth(`/messages/${conversationId}`)
+            }
+          >
+            Sign in
+          </button>
+        </section>
       </div>
     );
   }
@@ -503,13 +601,14 @@ export default function ConversationPage() {
   const isAdmin = conversation?.role === "admin";
 
   return (
-    <div className="chat-fullscreen">
+    <div className="messages-workspace">
       <aside
         className="chat-fullscreen-sidebar"
         aria-label="Your conversations"
       >
         <div className="chat-fullscreen-sidebar-head">
           <h1>Chats</h1>
+
           <Link
             href="/messages"
             className="icon-button"
@@ -529,7 +628,8 @@ export default function ConversationPage() {
               document
                 .querySelectorAll<HTMLElement>("[data-chat-search]")
                 .forEach((element) => {
-                  element.hidden = !element.dataset.chatSearch?.includes(query);
+                  element.hidden =
+                    !element.dataset.chatSearch?.includes(query);
                 });
             }}
           />
@@ -554,7 +654,8 @@ export default function ConversationPage() {
               <span className="chat-fullscreen-row-copy">
                 <strong>{item.displayName || item.title}</strong>
                 <span>
-                  {item.isRequest || item.requestStatus === "pending"
+                  {item.isRequest ||
+                  item.requestStatus === "pending"
                     ? "Message request"
                     : item.lastMessage || "No messages yet"}
                 </span>
@@ -565,7 +666,9 @@ export default function ConversationPage() {
                   className="chat-unread-badge"
                   aria-label={`${item.unreadCount} unread messages`}
                 >
-                  {item.unreadCount! > 99 ? "99+" : item.unreadCount}
+                  {item.unreadCount! > 99
+                    ? "99+"
+                    : item.unreadCount}
                 </span>
               )}
             </Link>
@@ -591,10 +694,16 @@ export default function ConversationPage() {
 
           {conversation && !isGroup && (
             <Link
-              href={`/profile/${encodeURIComponent(conversation.username)}`}
+              href={`/profile/${encodeURIComponent(
+                conversation.username
+              )}`}
             >
               <Avatar
-                name={conversation.displayName || conversation.username || "Conversation"}
+                name={
+                  conversation.displayName ||
+                  conversation.username ||
+                  "Conversation"
+                }
                 src={conversation.avatarUrl}
                 size={44}
               />
@@ -607,6 +716,7 @@ export default function ConversationPage() {
                 conversation?.title ||
                 "Conversation"}
             </strong>
+
             <span>
               {isGroup
                 ? `${conversation?.memberCount || 0} members · ${
@@ -623,7 +733,9 @@ export default function ConversationPage() {
               type="button"
               className="icon-button"
               aria-label="Group settings"
-              onClick={() => setShowGroupTools((value) => !value)}
+              onClick={() =>
+                setShowGroupTools((value) => !value)
+              }
             >
               <Users size={17} />
             </button>
@@ -633,7 +745,9 @@ export default function ConversationPage() {
             conversationId={conversationId}
             userId={user.id}
             recipientId={
-              isGroup ? null : conversation?.participantId || null
+              isGroup
+                ? null
+                : conversation?.participantId || null
             }
           />
 
@@ -660,14 +774,19 @@ export default function ConversationPage() {
               >
                 <input
                   value={memberUsername}
-                  onChange={(event) => setMemberUsername(event.target.value)}
+                  onChange={(event) =>
+                    setMemberUsername(event.target.value)
+                  }
                   placeholder="Username to add"
                   aria-label="Username to add"
                 />
+
                 <button
                   type="submit"
                   className="button button-secondary"
-                  disabled={actionBusy || !memberUsername.trim()}
+                  disabled={
+                    actionBusy || !memberUsername.trim()
+                  }
                 >
                   Add member
                 </button>
@@ -678,7 +797,7 @@ export default function ConversationPage() {
               <button
                 className="button button-secondary"
                 onClick={() => void groupAction("clear")}
-                disabled={actionBusy || (isGroup && !isAdmin)}
+                disabled={actionBusy || !isAdmin}
               >
                 Clear history
               </button>
@@ -705,9 +824,16 @@ export default function ConversationPage() {
         )}
 
         {error && (
-          <p className="form-error" role="status" style={{ margin: 12 }}>
+          <p
+            className="form-error"
+            role="status"
+            style={{ margin: 12 }}
+          >
             {error}{" "}
-            <button type="button" onClick={() => void load(false)}>
+            <button
+              type="button"
+              onClick={() => void load(false)}
+            >
               Refresh
             </button>
           </p>
@@ -718,7 +844,9 @@ export default function ConversationPage() {
             <div className="chat-empty-state">
               <MessageCircle size={32} />
               <strong>Say hello 👋</strong>
-              <span>Your messages are private to this conversation.</span>
+              <span>
+                Your messages are private to this conversation.
+              </span>
             </div>
           )}
 
@@ -734,67 +862,74 @@ export default function ConversationPage() {
                   item.senderId === user.id ? "mine" : ""
                 }`}
               >
-                {item.messageType === "image" && item.attachmentUrl && (
-                  <a
-                    href={item.attachmentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <img
-                      className="chat-attachment-image"
+                {item.messageType === "image" &&
+                  item.attachmentUrl && (
+                    <a
+                      href={item.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img
+                        className="chat-attachment-image"
+                        src={item.attachmentUrl}
+                        alt={
+                          item.attachmentName ||
+                          "Image attachment"
+                        }
+                      />
+                    </a>
+                  )}
+
+                {item.messageType === "video" &&
+                  item.attachmentUrl && (
+                    <video
+                      className="chat-attachment-video"
                       src={item.attachmentUrl}
-                      alt={item.attachmentName || "Image attachment"}
+                      controls
+                      playsInline
+                      preload="metadata"
                     />
-                  </a>
-                )}
+                  )}
 
-                {item.messageType === "video" && item.attachmentUrl && (
-                  <video
-                    className="chat-attachment-video"
-                    src={item.attachmentUrl}
-                    controls
-                    playsInline
-                    preload="metadata"
-                  />
-                )}
+                {item.messageType === "voice" &&
+                  item.attachmentUrl && (
+                    <audio
+                      className="chat-voice-player"
+                      src={item.attachmentUrl}
+                      controls
+                      preload="metadata"
+                      aria-label="Voice note"
+                    />
+                  )}
 
-                {item.messageType === "voice" && item.attachmentUrl && (
-                  <audio
-                    className="chat-voice-player"
-                    src={item.attachmentUrl}
-                    controls
-                    preload="metadata"
-                    aria-label="Voice note"
-                  />
-                )}
-
-                {item.messageType === "file" && item.attachmentUrl && (
-                  <a
-                    className="chat-file-link"
-                    href={item.attachmentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <FilePlus2 size={18} />
-                    <span>
-                      {item.attachmentName || "Download attachment"}
-                    </span>
-                  </a>
-                )}
+                {item.messageType === "file" &&
+                  item.attachmentUrl && (
+                    <a
+                      className="chat-file-link"
+                      href={item.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <FilePlus2 size={18} />
+                      <span>
+                        {item.attachmentName ||
+                          "Download attachment"}
+                      </span>
+                    </a>
+                  )}
 
                 {item.body && <p>{item.body}</p>}
 
                 {(item.reactions || []).length > 0 && (
                   <div className="message-reaction-list">
                     {Object.entries(
-                      (item.reactions || []).reduce<Record<string, number>>(
-                        (acc, reaction) => {
-                          acc[reaction.emoji] =
-                            (acc[reaction.emoji] || 0) + 1;
-                          return acc;
-                        },
-                        {}
-                      )
+                      (item.reactions || []).reduce<
+                        Record<string, number>
+                      >((acc, reaction) => {
+                        acc[reaction.emoji] =
+                          (acc[reaction.emoji] || 0) + 1;
+                        return acc;
+                      }, {})
                     ).map(([emoji, count]) => (
                       <span key={emoji}>
                         {emoji} {count}
@@ -805,21 +940,28 @@ export default function ConversationPage() {
 
                 <div className="chat-bubble-meta">
                   <time>
-                    {new Date(item.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {new Date(item.createdAt).toLocaleTimeString(
+                      [],
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </time>
 
                   {item.senderId === user.id && (
                     <span
                       title={
-                        (item.receipts || []).some((receipt) => receipt.readAt)
+                        (item.receipts || []).some(
+                          (receipt) => receipt.readAt
+                        )
                           ? "Read"
                           : "Sent"
                       }
                       aria-label={
-                        (item.receipts || []).some((receipt) => receipt.readAt)
+                        (item.receipts || []).some(
+                          (receipt) => receipt.readAt
+                        )
                           ? "Read"
                           : "Sent"
                       }
@@ -843,16 +985,17 @@ export default function ConversationPage() {
                     </button>
                   )}
 
-                  {item.senderId === user.id && !item.deletedForEveryone && (
-                    <button
-                      type="button"
-                      title="Unsend for everyone"
-                      aria-label="Unsend message for everyone"
-                      onClick={() => void unsend(item)}
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  )}
+                  {item.senderId === user.id &&
+                    !item.deletedForEveryone && (
+                      <button
+                        type="button"
+                        title="Unsend for everyone"
+                        aria-label="Unsend message for everyone"
+                        onClick={() => void unsend(item)}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
                 </div>
 
                 <div className="message-hover-actions">
@@ -927,7 +1070,10 @@ export default function ConversationPage() {
             <strong>Recording voice note</strong>
 
             <span>
-              {String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:
+              {String(
+                Math.floor(recordingSeconds / 60)
+              ).padStart(2, "0")}
+              :
               {String(recordingSeconds % 60).padStart(2, "0")}
             </span>
 
@@ -947,7 +1093,9 @@ export default function ConversationPage() {
             role="region"
             aria-label="Voice note preview"
           >
-            <strong>Voice note ready — listen before sending</strong>
+            <strong>
+              Voice note ready — listen before sending
+            </strong>
 
             <audio
               controls
@@ -956,7 +1104,11 @@ export default function ConversationPage() {
             />
 
             <span>
-              {Math.max(1, Math.round(voicePreview.size / 1024))} KB
+              {Math.max(
+                1,
+                Math.round(voicePreview.size / 1024)
+              )}{" "}
+              KB
             </span>
 
             <div className="voice-note-preview-actions">
@@ -976,7 +1128,10 @@ export default function ConversationPage() {
                 disabled={sending}
               >
                 {sending ? (
-                  <LoaderCircle size={16} className="animate-spin" />
+                  <LoaderCircle
+                    size={16}
+                    className="animate-spin"
+                  />
                 ) : (
                   "Send voice note"
                 )}
@@ -1013,20 +1168,34 @@ export default function ConversationPage() {
 
           <button
             type="button"
-            className={`icon-button ${recording ? "recording-active" : ""}`}
-            title={recording ? "Stop recording" : "Record voice note"}
-            aria-label={recording ? "Stop recording" : "Record voice note"}
+            className={`icon-button ${
+              recording ? "recording-active" : ""
+            }`}
+            title={
+              recording ? "Stop recording" : "Record voice note"
+            }
+            aria-label={
+              recording ? "Stop recording" : "Record voice note"
+            }
             onClick={() =>
-              recording ? stopRecording() : void startRecording()
+              recording
+                ? stopRecording()
+                : void startRecording()
             }
             disabled={sending || !!voicePreview}
           >
-            {recording ? <MicOff size={18} /> : <Mic size={18} />}
+            {recording ? (
+              <MicOff size={18} />
+            ) : (
+              <Mic size={18} />
+            )}
           </button>
 
           <input
             value={message}
-            onChange={(event) => handleMessageChange(event.target.value)}
+            onChange={(event) =>
+              handleMessageChange(event.target.value)
+            }
             placeholder="Type a message"
             aria-label="Type a message"
             maxLength={5000}
@@ -1040,7 +1209,10 @@ export default function ConversationPage() {
             disabled={!message.trim() || sending}
           >
             {sending ? (
-              <LoaderCircle size={17} className="animate-spin" />
+              <LoaderCircle
+                size={17}
+                className="animate-spin"
+              />
             ) : (
               <Send size={17} />
             )}
@@ -1049,22 +1221,45 @@ export default function ConversationPage() {
       </section>
 
       <style jsx global>{`
-        .chat-fullscreen {
-          min-height: 0;
+        .messages-workspace {
+          display: flex;
+          width: 100%;
+          min-width: 0;
           height: calc(100dvh - 80px);
-        }
-
-        .chat-fullscreen-sidebar {
           min-height: 0;
+          overflow: hidden;
         }
 
-        .chat-fullscreen-list {
+        .messages-workspace .chat-fullscreen-sidebar {
+          display: flex;
+          flex-direction: column;
+          flex: 0 0 300px;
+          width: 300px;
+          min-width: 240px;
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        .messages-workspace .chat-fullscreen-list {
+          flex: 1;
           min-height: 0;
           overflow-y: auto;
         }
 
-        .chat-fullscreen-row {
+        .messages-workspace .chat-fullscreen-row {
           position: relative;
+        }
+
+        .messages-workspace .chat-fullscreen-row-copy {
+          min-width: 0;
+          flex: 1;
+        }
+
+        .messages-workspace .chat-fullscreen-row-copy strong,
+        .messages-workspace .chat-fullscreen-row-copy span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .chat-unread-badge {
@@ -1081,6 +1276,43 @@ export default function ConversationPage() {
           font-weight: 700;
           margin-left: auto;
           flex-shrink: 0;
+        }
+
+        .messages-workspace .chat-fullscreen-main.is-chat {
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          min-width: 0;
+          min-height: 0;
+          height: 100%;
+          overflow: hidden;
+        }
+
+        .messages-workspace .chat-fullscreen-header {
+          flex-shrink: 0;
+        }
+
+        .messages-workspace .chat-fullscreen-messages {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+        }
+
+        .messages-workspace .chat-fullscreen-compose {
+          flex-shrink: 0;
+        }
+
+        .chat-mobile-back {
+          display: none;
+        }
+
+        .conversation-loading {
+          display: flex;
+          min-height: 40vh;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
         }
 
         .reply-compose-preview {
@@ -1138,40 +1370,36 @@ export default function ConversationPage() {
         }
 
         @media (max-width: 760px) {
-          .chat-fullscreen {
-            display: block !important;
+          .messages-workspace {
             height: calc(100dvh - 64px);
             min-height: 0;
           }
 
-          .chat-fullscreen-sidebar {
-            display: none !important;
+          .messages-workspace .chat-fullscreen-sidebar {
+            display: none;
           }
 
-          .chat-fullscreen-main.is-chat {
-            display: flex !important;
-            width: 100% !important;
+          .messages-workspace .chat-fullscreen-main.is-chat {
+            display: flex;
+            width: 100%;
             height: 100%;
-            min-height: 0;
           }
 
-          .chat-fullscreen-messages {
-            min-height: 0;
+          .messages-workspace .chat-fullscreen-messages {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
           }
 
-          .chat-fullscreen-header {
-            flex-shrink: 0;
-          }
-
-          .chat-fullscreen-compose {
-            flex-shrink: 0;
-            padding-bottom: max(10px, env(safe-area-inset-bottom));
+          .messages-workspace .chat-fullscreen-compose {
+            padding-bottom: max(
+              10px,
+              env(safe-area-inset-bottom)
+            );
           }
 
           .chat-mobile-back {
-            display: inline-flex !important;
+            display: inline-flex;
           }
         }
       `}</style>

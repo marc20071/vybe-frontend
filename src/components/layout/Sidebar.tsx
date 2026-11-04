@@ -24,6 +24,7 @@ const mainLinks = [
   { href: "/", label: "Home", icon: House },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/following", label: "Following", icon: Users },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
 ];
 
 const personalLinks = [
@@ -60,6 +61,29 @@ export function Sidebar() {
     }
   }
 
+  function renderNavigationLink(item: {
+    href: string;
+    label: string;
+    icon: React.ComponentType<{ size?: number }>;
+  }) {
+    const Icon = item.icon;
+    const active = isActive(item.href);
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`nav-link ${active ? "active" : ""}`}
+        title={collapsed ? item.label : undefined}
+        aria-current={active ? "page" : undefined}
+        onClick={() => setMoreOpen(false)}
+      >
+        <Icon size={21} />
+        <span>{item.label}</span>
+      </Link>
+    );
+  }
+
   return (
     <aside
       className={`sidebar ${collapsed ? "sidebar-collapsed" : ""}`}
@@ -82,55 +106,20 @@ export function Sidebar() {
       </button>
 
       <nav className="nav-list" aria-label="Main">
-        {mainLinks.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-link ${active ? "active" : ""}`}
-              title={collapsed ? item.label : undefined}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon size={21} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+        {mainLinks.map(renderNavigationLink)}
       </nav>
 
       <div className="sidebar-section">
         <p className="nav-label">YOUR SPACE</p>
 
         <nav className="nav-list" aria-label="Your space">
-          {personalLinks.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+          {personalLinks.map(renderNavigationLink)}
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link ${active ? "active" : ""}`}
-                title={collapsed ? item.label : undefined}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon size={21} />
-                <span>{item.label}</span>
-              </Link>
-            );
+          {renderNavigationLink({
+            href: "/settings",
+            label: "Settings",
+            icon: Settings,
           })}
-
-          <Link
-            href="/settings"
-            className={`nav-link ${isActive("/settings") ? "active" : ""}`}
-            title={collapsed ? "Settings" : undefined}
-          >
-            <Settings size={21} />
-            <span>Settings</span>
-          </Link>
         </nav>
       </div>
 
