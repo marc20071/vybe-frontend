@@ -2263,3 +2263,208 @@ button:disabled,
   }
 }
 
+
+/* ==========================================================================
+   VYBE — FINAL VISIBILITY, READABILITY AND ACCESSIBILITY REFINEMENTS
+   These overrides intentionally preserve the existing layout, colors,
+   component behavior, responsive breakpoints and interaction states.
+   ========================================================================== */
+
+/* Improve the contrast of secondary and supporting text across the app. */
+:root {
+  --muted: #b8b5c6;
+}
+
+.muted,
+.creator-handle,
+.video-description,
+.creator-result-bio,
+.conversation-last-message,
+.profile-bio,
+.footer-note,
+.feed-note,
+.upload-file-types,
+.story-track small,
+.story-audio-settings label,
+.story-composer > .muted,
+.story-viewer-author small,
+.chat-empty-state,
+.chat-fullscreen-row-copy span,
+.chat-fullscreen-header-copy span,
+.suggested-heading-title > span,
+.suggested-account-info small,
+.suggested-empty,
+.suggested-empty p,
+.messages-quick-access .messages-subtitle,
+.feed-quick-messages-section .messages-subtitle,
+.feed-quick-messages-section .messages-arrow {
+  color: #b8b5c6;
+}
+
+/* Keep metadata readable without competing with primary headings. */
+.creator-meta,
+.creator-meta a,
+.notification-copy .muted,
+.conversation-copy .muted,
+.comment-list time,
+.story-comments-list small,
+.story-music-chip,
+.story-inline-error {
+  color: #c0bdcc;
+}
+
+.nav-label,
+.mobile-nav-item,
+.story-item,
+.engagement > button,
+.post-view-count {
+  color: #b8b5c6;
+}
+
+.nav-link {
+  color: #c2bfd0;
+}
+
+.nav-link.active,
+.feed-tab.active {
+  color: #eee8ff;
+}
+
+.feed-tab {
+  color: #b8b5c6;
+}
+
+/* Improve placeholder and form-label contrast. */
+.search-box input::placeholder,
+.form-field input::placeholder,
+.form-field textarea::placeholder,
+.explore-search input::placeholder,
+.chat-compose input::placeholder,
+.chat-fullscreen-compose input::placeholder,
+.chat-fullscreen-search input::placeholder,
+.start-conversation-form input::placeholder,
+.story-music-search input::placeholder,
+.story-comments-panel form input::placeholder {
+  color: #aaa7b8;
+  opacity: 1;
+}
+
+.form-field label,
+.start-conversation-form > label {
+  color: #e0ddeb;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select,
+.explore-search input,
+.chat-compose input,
+.chat-fullscreen-compose input,
+.chat-fullscreen-search input,
+.start-conversation-form input,
+.story-music-search input,
+.story-comments-panel form input {
+  color: #f6f5fb;
+}
+
+/* Make low-emphasis buttons and icons easier to distinguish. */
+.button-ghost,
+.icon-button,
+.engagement > button,
+.notification-row,
+.mobile-nav-item {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button-ghost {
+  color: #e1deeb;
+}
+
+.icon-button {
+  color: #e3e0ed;
+}
+
+.engagement > button:hover,
+.engagement > button:focus-visible {
+  color: #d7c8ff;
+}
+
+/* Visible keyboard focus for links, buttons, and form controls. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #c4b5fd;
+  outline-offset: 3px;
+}
+
+.form-field input:focus-visible,
+.form-field textarea:focus-visible,
+.form-field select:focus-visible,
+.search-box:focus-within,
+.explore-search:focus-within {
+  border-color: #c4b5fd;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+}
+
+/* Keep text legible on the existing dark chat surfaces. */
+.chat-fullscreen-row-copy strong,
+.chat-fullscreen-header-copy strong {
+  color: #f4f1fa;
+}
+
+.chat-fullscreen-messages .chat-bubble {
+  color: #f1eef7;
+}
+
+.chat-fullscreen-messages .chat-bubble.mine {
+  color: #ffffff;
+}
+
+.chat-fullscreen-compose input {
+  color: #f4f1fa;
+}
+
+.chat-fullscreen-compose input::placeholder {
+  color: #b8b5c6;
+  opacity: 1;
+}
+
+/* Ensure captions and long user-generated text remain readable. */
+.instagram-caption,
+.profile-post-caption,
+.single-post-caption,
+.chat-bubble p,
+.comment-list article p,
+.story-viewer-text,
+.story-viewer-caption {
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+
+/* Slightly strengthen small text while preserving the established sizing. */
+.creator-handle,
+.feed-note,
+.nav-label,
+.footer-note,
+.form-error,
+.upload-file-types,
+.comment-list time,
+.story-track small,
+.story-viewer-author small {
+  font-weight: 500;
+}
+
+/* Respect the existing reduced-motion preference for newly emphasized states. */
+@media (prefers-reduced-motion: reduce) {
+  a,
+  button,
+  input,
+  textarea,
+  select {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
