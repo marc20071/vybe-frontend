@@ -34,27 +34,6 @@ import {
 
 type ChatView = "conversations" | "chat";
 
-function getMessagePreview(message: Message): string {
-  if (message.deletedForEveryone) return "Message unsent";
-
-  if (message.body?.trim()) return message.body;
-
-  switch (message.messageType) {
-    case "image":
-      return "Photo";
-    case "video":
-      return "Video";
-    case "voice":
-      return "Voice message";
-    case "file":
-      return message.attachmentName || "File";
-    case "system":
-      return "Conversation update";
-    default:
-      return "Message";
-  }
-}
-
 function formatMessageTime(value?: string | null): string {
   if (!value) return "";
 
@@ -95,8 +74,13 @@ function formatConversationTime(value?: string | null): string {
 
   const difference = now.getTime() - date.getTime();
 
-  if (difference < 7 * 24 * 60 * 60 * 1000) {
-    return date.toLocaleDateString([], { weekday: "short" });
+  if (
+    difference >= 0 &&
+    difference < 7 * 24 * 60 * 60 * 1000
+  ) {
+    return date.toLocaleDateString([], {
+      weekday: "short",
+    });
   }
 
   return date.toLocaleDateString([], {
@@ -120,6 +104,33 @@ function getConversationName(conversation: Conversation): string {
 
 function getConversationAvatar(conversation: Conversation) {
   return conversation.avatarUrl || null;
+}
+
+function getConversationPreview(conversation: Conversation): string {
+  if (conversation.isRequest) return "Message request";
+
+  return conversation.lastMessage || "Start chatting";
+}
+
+function getMessagePreview(message: Message): string {
+  if (message.deletedForEveryone) return "Message unsent";
+
+  if (message.body?.trim()) return message.body;
+
+  switch (message.messageType) {
+    case "image":
+      return "Photo";
+    case "video":
+      return "Video";
+    case "voice":
+      return "Voice message";
+    case "file":
+      return message.attachmentName || "File";
+    case "system":
+      return "Conversation update";
+    default:
+      return "Message";
+  }
 }
 
 export function FloatingChat() {
@@ -147,8 +158,8 @@ export function FloatingChat() {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
   const activeConversationIdRef = useRef<string | null>(null);
-  const loadingMessagesIdRef = useRef<string | null>(null);
   const messagesRequestIdRef = useRef(0);
   const sendingRef = useRef(false);
 
@@ -185,7 +196,7 @@ export function FloatingChat() {
         );
       });
     } catch {
-      // Preserve already-loaded conversations if a background refresh fails.
+      // Keep previously loaded conversations if refreshing fails.
     } finally {
       setLoadingConversations(false);
     }
@@ -210,33 +221,28 @@ export function FloatingChat() {
           return;
         }
 
-        const items = response.items || [];
-
         setMessages((current) => {
-          // Preserve the current list if the active conversation changed.
           if (activeConversationIdRef.current !== conversationId) {
             return current;
           }
 
-          return items;
+          return response.items || [];
         });
       } catch (err) {
         if (
           requestId === messagesRequestIdRef.current &&
-          activeConversationIdRef.current === conversationId
+          activeConversationIdRef.current === conversationId &&
+          showLoading
         ) {
-          if (showLoading) {
-            setError(
-              err instanceof Error
-                ? err.message
-                : "Unable to load this conversation."
-            );
-          }
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load this conversation."
+          );
         }
       } finally {
         if (requestId === messagesRequestIdRef.current) {
           setLoadingMessages(false);
-          loadingMessagesIdRef.current = null;
         }
       }
     },
@@ -246,7 +252,7 @@ export function FloatingChat() {
   const selectConversation = useCallback(
     async (conversation: Conversation) => {
       activeConversationIdRef.current = conversation.id;
-      loadingMessagesIdRef.current = conversation.id;
+      messagesRequestIdRef.current += 1;
 
       setActiveConversation(conversation);
       setMessages([]);
@@ -267,13 +273,13 @@ export function FloatingChat() {
 
   const backToConversations = useCallback(() => {
     activeConversationIdRef.current = null;
-    loadingMessagesIdRef.current = null;
     messagesRequestIdRef.current += 1;
 
     setActiveConversation(null);
     setMessages([]);
     setOtherTyping(false);
     setError("");
+    setLoadingMessages(false);
     setView("conversations");
 
     void loadConversations();
@@ -292,6 +298,10 @@ export function FloatingChat() {
 
   const minimizePopup = useCallback(() => {
     setIsMinimized(true);
+  }, []);
+
+  const restorePopup = useCallback(() => {
+    setIsMinimized(false);
   }, []);
 
   useEffect(() => {
@@ -393,15 +403,15 @@ export function FloatingChat() {
   }, [messages, isOpen, isMinimized, view, otherTyping]);
 
   useEffect(() => {
-    if (!isOpen || isMinimized || view !== "chat") return;
+    if (!isOpen || isMinimized) return;
 
     const handleEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (view === "chat") {
-          backToConversations();
-        } else {
-          closePopup();
-        }
+      if (event.key !== "Escape") return;
+
+      if (view === "chat") {
+        backToConversations();
+      } else {
+        closePopup();
       }
     };
 
@@ -410,7 +420,13 @@ export function FloatingChat() {
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, isMinimized, view, backToConversations, closePopup]);
+  }, [
+    isOpen,
+    isMinimized,
+    view,
+    backToConversations,
+    closePopup,
+  ]);
 
   const filteredConversations = conversations.filter((conversation) => {
     const query = searchTerm.trim().toLowerCase();
@@ -471,12 +487,7 @@ export function FloatingChat() {
   ) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-
-      const form = event.currentTarget.form;
-
-      if (form) {
-        form.requestSubmit();
-      }
+      event.currentTarget.form?.requestSubmit();
     }
   }
 
@@ -564,7 +575,7 @@ export function FloatingChat() {
             </time>
 
             {isOwnMessage && (
-              <span aria-label="Sent message">
+              <span aria-label="Message read status">
                 {message.receipts?.some((receipt) => receipt.readAt) ? (
                   <CheckCheck size={13} />
                 ) : (
@@ -593,14 +604,15 @@ export function FloatingChat() {
           if (!isOpen) {
             openPopup();
           } else if (isMinimized) {
-            setIsMinimized(false);
+            restorePopup();
           } else {
             closePopup();
           }
         }}
       >
         <span className="messages-icon">
-          <MessageCircle size={23} strokeWidth={2.2} />
+          <MessageCircle size={19} strokeWidth={2} />
+
           {unreadCount > 0 && (
             <span className="floating-chat-shortcut-badge">
               {unreadCount > 99 ? "99+" : unreadCount}
@@ -610,13 +622,16 @@ export function FloatingChat() {
 
         <span className="messages-text">
           <span className="messages-title">Messages</span>
+
           <span className="messages-subtitle">
-            Chat without leaving your feed
+            {unreadCount > 0
+              ? `${unreadCount} unread messages`
+              : "Your conversations"}
           </span>
         </span>
 
         <span className="messages-arrow" aria-hidden="true">
-          →
+          {isOpen && !isMinimized ? "−" : "+"}
         </span>
       </button>
 
@@ -635,11 +650,11 @@ export function FloatingChat() {
                 aria-label="Back to conversations"
                 onClick={backToConversations}
               >
-                <ArrowLeft size={19} />
+                <ArrowLeft size={17} />
               </button>
             ) : (
               <div className="floating-chat-heading-icon">
-                <MessageCircle size={19} />
+                <MessageCircle size={18} />
               </div>
             )}
 
@@ -668,7 +683,7 @@ export function FloatingChat() {
                 title="Open full conversation"
                 aria-label="Open full conversation"
               >
-                <MoreHorizontal size={19} />
+                <MoreHorizontal size={18} />
               </Link>
             )}
 
@@ -678,7 +693,7 @@ export function FloatingChat() {
               aria-label="Minimize quick messages"
               onClick={minimizePopup}
             >
-              <Minus size={19} />
+              <Minus size={17} />
             </button>
 
             <button
@@ -687,7 +702,7 @@ export function FloatingChat() {
               aria-label="Close quick messages"
               onClick={closePopup}
             >
-              <X size={19} />
+              <X size={17} />
             </button>
           </header>
 
@@ -696,7 +711,7 @@ export function FloatingChat() {
               {view === "conversations" ? (
                 <>
                   <div className="floating-chat-search">
-                    <Search size={17} />
+                    <Search size={16} />
 
                     <input
                       type="search"
@@ -715,7 +730,7 @@ export function FloatingChat() {
                         <div className="floating-chat-state">
                           <LoaderCircle
                             className="floating-chat-spinner"
-                            size={22}
+                            size={21}
                           />
                           <span>Loading conversations…</span>
                         </div>
@@ -724,8 +739,14 @@ export function FloatingChat() {
                     {!loadingConversations &&
                       filteredConversations.length === 0 && (
                         <div className="floating-chat-state">
-                          <MessageCircle size={27} />
-                          <strong>No conversations found</strong>
+                          <MessageCircle size={25} />
+
+                          <strong>
+                            {searchTerm.trim()
+                              ? "No conversations found"
+                              : "No conversations yet"}
+                          </strong>
+
                           <span>
                             Start a conversation from a profile or open
                             the full Messages page.
@@ -745,7 +766,7 @@ export function FloatingChat() {
                         <Avatar
                           name={getConversationName(conversation)}
                           src={getConversationAvatar(conversation)}
-                          size={46}
+                          size={40}
                         />
 
                         <span className="floating-chat-conversation-info">
@@ -763,10 +784,7 @@ export function FloatingChat() {
 
                           <span className="floating-chat-conversation-bottom">
                             <span>
-                              {conversation.isRequest
-                                ? "Message request"
-                                : conversation.lastMessage ||
-                                  "Start chatting"}
+                              {getConversationPreview(conversation)}
                             </span>
 
                             {(conversation.unreadCount || 0) > 0 && (
@@ -786,7 +804,7 @@ export function FloatingChat() {
                         <div className="floating-chat-refresh-indicator">
                           <LoaderCircle
                             className="floating-chat-spinner"
-                            size={14}
+                            size={13}
                           />
                           Updating conversations…
                         </div>
@@ -800,7 +818,7 @@ export function FloatingChat() {
                       onClick={closePopup}
                     >
                       Open full Messages
-                      <ArrowUp size={15} />
+                      <ArrowUp size={14} />
                     </Link>
                   </footer>
                 </>
@@ -818,7 +836,7 @@ export function FloatingChat() {
                           ? getConversationAvatar(activeConversation)
                           : null
                       }
-                      size={34}
+                      size={33}
                     />
 
                     <div>
@@ -843,7 +861,7 @@ export function FloatingChat() {
                       <div className="floating-chat-state">
                         <LoaderCircle
                           className="floating-chat-spinner"
-                          size={22}
+                          size={21}
                         />
                         <span>Loading messages…</span>
                       </div>
@@ -853,7 +871,7 @@ export function FloatingChat() {
                       !error &&
                       messages.length === 0 && (
                         <div className="floating-chat-state">
-                          <MessageCircle size={27} />
+                          <MessageCircle size={25} />
                           <strong>No messages yet</strong>
                           <span>Send a message to start chatting.</span>
                         </div>
@@ -862,7 +880,10 @@ export function FloatingChat() {
                     {messages.map(renderMessage)}
 
                     {otherTyping && (
-                      <div className="floating-chat-typing">
+                      <div
+                        className="floating-chat-typing"
+                        aria-label="The other person is typing"
+                      >
                         <span />
                         <span />
                         <span />
@@ -916,11 +937,11 @@ export function FloatingChat() {
                     >
                       {sending ? (
                         <LoaderCircle
-                          size={18}
+                          size={17}
                           className="floating-chat-spinner"
                         />
                       ) : (
-                        <Send size={17} />
+                        <Send size={16} />
                       )}
                     </button>
                   </form>
@@ -938,7 +959,7 @@ export function FloatingChat() {
                       onClick={closePopup}
                     >
                       Open full conversation
-                      <ArrowUp size={15} />
+                      <ArrowUp size={14} />
                     </Link>
                   </footer>
                 </>

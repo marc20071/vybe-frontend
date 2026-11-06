@@ -2,6 +2,9 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
+import { Users, ArrowRight } from "lucide-react";
+
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar } from "@/components/ui/Avatar";
 import { FollowButton } from "@/components/profiles/FollowButton";
@@ -19,56 +22,100 @@ export function SuggestedAccounts({
 }) {
   const { user } = useAuth();
 
-  const visibleCreators = creators
-    .filter(
+  const visibleCreators = useMemo(() => {
+    const currentUsername = user?.username?.toLowerCase();
+
+    const uniqueCreators = creators.filter(
       (creator, index, all) =>
-        creator.username &&
-        creator.username.toLowerCase() !== user?.username?.toLowerCase() &&
+        Boolean(creator.username?.trim()) &&
+        creator.username.toLowerCase() !== currentUsername &&
         all.findIndex(
           (item) =>
-            item.username.toLowerCase() === creator.username.toLowerCase()
+            item.username.toLowerCase() ===
+            creator.username.toLowerCase()
         ) === index
-    )
-    .slice(0, 6);
+    );
+
+    return uniqueCreators.slice(0, 6);
+  }, [creators, user?.username]);
 
   return (
     <aside className="suggested-accounts">
       <div className="suggested-heading">
-        <h3>Discover creators</h3>
-        <Link href="/explore">See all</Link>
+        <div className="suggested-heading-title">
+          <h3>Discover creators</h3>
+          <span>People you may like</span>
+        </div>
+
+        <Link
+          href="/explore"
+          className="suggested-see-all"
+          aria-label="Explore all creators"
+        >
+          See all
+        </Link>
       </div>
 
-      {visibleCreators.length ? (
+      {visibleCreators.length > 0 ? (
         <div className="suggested-list">
-          {visibleCreators.map((creator) => (
-            <div className="suggested-account" key={creator.username}>
-              <Link
-                href={`/profile/${creator.username}`}
-                className="suggested-account-profile"
-              >
-                <Avatar
-                  name={creator.displayName || creator.username}
-                  src={creator.avatarUrl}
-                  size={40}
-                />
-                <span>
-                  <strong>{creator.displayName || creator.username}</strong>
-                  <small>@{creator.username}</small>
-                </span>
-              </Link>
+          {visibleCreators.map((creator) => {
+            const displayName =
+              creator.displayName?.trim() || creator.username;
 
-              <FollowButton username={creator.username} />
-            </div>
-          ))}
+            return (
+              <div
+                className="suggested-account"
+                key={creator.username.toLowerCase()}
+              >
+                <Link
+                  href={`/profile/${encodeURIComponent(
+                    creator.username
+                  )}`}
+                  className="suggested-account-profile"
+                >
+                  <Avatar
+                    name={displayName}
+                    src={creator.avatarUrl || null}
+                    size={40}
+                  />
+
+                  <span className="suggested-account-info">
+                    <strong title={displayName}>
+                      {displayName}
+                    </strong>
+
+                    <small>@{creator.username}</small>
+                  </span>
+                </Link>
+
+                <FollowButton username={creator.username} />
+              </div>
+            );
+          })}
         </div>
       ) : (
-        <p className="muted suggested-empty">
-          More creators will appear here as posts load.
-        </p>
+        <div className="suggested-empty">
+          <Users size={23} />
+
+          <strong>Discover new creators</strong>
+
+          <p>
+            More people will appear here as creators and posts become
+            available.
+          </p>
+
+          <Link href="/explore">
+            Explore creators
+            <ArrowRight size={14} />
+          </Link>
+        </div>
       )}
 
       <div className="suggested-footer">
-        <Link href="/explore">Explore more people on VYBE</Link>
+        <Link href="/explore">
+          Explore more people on VYBE
+          <ArrowRight size={14} />
+        </Link>
       </div>
     </aside>
   );

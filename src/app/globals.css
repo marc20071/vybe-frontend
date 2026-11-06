@@ -1715,3 +1715,551 @@ button:disabled,
   }
 }
 
+/* VYBE desktop feed and persistent right sidebar */
+.home-feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 24px;
+  width: 100%;
+}
+
+.feed-column {
+  min-width: 0;
+  width: 100%;
+}
+
+.feed-sidebar-stack {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 16px;
+  min-width: 0;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-bottom: 12px;
+}
+
+.feed-suggested-section,
+.feed-quick-messages-section {
+  min-width: 0;
+  width: 100%;
+}
+
+/* More compact feed posts */
+.instagram-post {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto 18px;
+  padding: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.instagram-post-header {
+  min-height: 42px;
+  margin-bottom: 8px;
+}
+
+.instagram-caption-top {
+  margin: 6px 0 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.instagram-post-media {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #111;
+}
+
+.instagram-post-media img,
+.instagram-post-media video {
+  display: block;
+  width: 100%;
+  max-height: 680px;
+  height: auto;
+  object-fit: contain;
+  margin-inline: auto;
+}
+
+.instagram-post-content {
+  padding-top: 8px;
+}
+
+@media (max-width: 1050px) {
+  .home-feed-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feed-sidebar-stack {
+    display: none;
+  }
+}
+/* =========================================
+   VYBE — COMPACT SIDEBAR QUICK MESSAGES
+========================================= */
+
+.feed-sidebar-stack {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+  min-width: 0;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.feed-quick-messages-section {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.feed-quick-messages-section .floating-chat-root {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 2;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.feed-quick-messages-section .messages-quick-access {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 58px;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 13px;
+  background: var(--card, #fff);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.feed-quick-messages-section .messages-quick-access:hover {
+  background: var(--muted, #f8fafc);
+}
+
+.feed-quick-messages-section .messages-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.feed-quick-messages-section .messages-text {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feed-quick-messages-section .messages-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.feed-quick-messages-section .messages-subtitle {
+  overflow: hidden;
+  color: #8b8b98;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-quick-messages-section .messages-arrow {
+  color: #92929e;
+  font-size: 18px;
+}
+
+.feed-quick-messages-section .floating-chat-shortcut-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border: 2px solid var(--card, #fff);
+  border-radius: 20px;
+  background: #ef4444;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Expanded chat stays inside the sidebar */
+.feed-quick-messages-section .floating-chat-panel {
+  position: relative !important;
+  inset: auto !important;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  height: 390px;
+  max-height: min(55vh, 450px);
+  margin-top: 9px;
+  overflow: hidden;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  background: var(--card, #fff);
+  box-shadow: 0 5px 22px rgba(0, 0, 0, 0.07);
+}
+
+.feed-quick-messages-section .floating-chat-panel.minimized {
+  height: auto;
+  min-height: 0;
+}
+
+.feed-quick-messages-section .floating-chat-header {
+  flex: 0 0 auto;
+  min-height: 52px;
+  padding: 9px 10px;
+}
+
+.feed-quick-messages-section .floating-chat-header-title strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-quick-messages-section .floating-chat-header-title span {
+  font-size: 10px;
+}
+
+.feed-quick-messages-section .floating-chat-icon-button {
+  width: 27px;
+  height: 27px;
+}
+
+.feed-quick-messages-section .floating-chat-search {
+  flex: 0 0 auto;
+  margin: 8px 10px;
+}
+
+.feed-quick-messages-section .floating-chat-conversation-list,
+.feed-quick-messages-section .floating-chat-message-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.feed-quick-messages-section .floating-chat-conversation {
+  gap: 9px;
+  padding: 9px 10px;
+}
+
+.feed-quick-messages-section .floating-chat-conversation .avatar {
+  flex-shrink: 0;
+}
+
+.feed-quick-messages-section .floating-chat-conversation-info {
+  min-width: 0;
+}
+
+.feed-quick-messages-section .floating-chat-conversation-top strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-quick-messages-section .floating-chat-conversation-bottom {
+  font-size: 11px;
+}
+
+.feed-quick-messages-section .floating-chat-footer {
+  flex: 0 0 auto;
+  padding: 9px 11px;
+}
+
+.feed-quick-messages-section .floating-chat-open-messages {
+  font-size: 11px;
+}
+
+.feed-quick-messages-section .floating-chat-active-person {
+  flex: 0 0 auto;
+  padding: 9px 11px;
+}
+
+.feed-quick-messages-section .floating-chat-message {
+  max-width: 88%;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.feed-quick-messages-section .floating-chat-composer {
+  flex: 0 0 auto;
+  padding: 9px;
+}
+
+/* Do not show the desktop quick-message panel on mobile */
+@media (max-width: 1050px) {
+  .feed-sidebar-stack {
+    display: none !important;
+  }
+
+  .feed-quick-messages-section {
+    display: none !important;
+  }
+}
+
+/* =========================================
+   VYBE SUGGESTED ACCOUNTS SIDEBAR
+========================================= */
+
+.suggested-accounts {
+  width: 100%;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 15px;
+  background: var(--card, #fff);
+}
+
+.suggested-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.suggested-heading-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.suggested-heading h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.suggested-heading-title > span {
+  color: var(--muted-foreground, #888);
+  font-size: 11px;
+}
+
+.suggested-see-all {
+  flex-shrink: 0;
+  color: var(--primary, #6366f1);
+  font-size: 11px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.suggested-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.suggested-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.suggested-account-profile {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.suggested-account-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.suggested-account-info strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggested-account-info small {
+  overflow: hidden;
+  color: var(--muted-foreground, #888);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggested-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 17px 8px;
+  text-align: center;
+  color: var(--muted-foreground, #888);
+}
+
+.suggested-empty strong {
+  color: var(--foreground, #222);
+  font-size: 12px;
+}
+
+.suggested-empty p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.suggested-empty a,
+.suggested-footer a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--primary, #6366f1);
+  font-size: 11px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.suggested-footer {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.suggested-footer a:hover,
+.suggested-see-all:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   VYBE POST ENGAGEMENT
+========================================= */
+
+.instagram-post {
+  position: relative;
+}
+
+.post-view-tracker {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.instagram-post-content {
+  min-width: 0;
+  padding: 8px 12px 12px;
+}
+
+.engagement {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-width: 0;
+}
+
+.engagement > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 5px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--foreground, #333);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.engagement > button:hover {
+  color: var(--primary, #7c3aed);
+}
+
+.engagement > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.engagement > button.liked {
+  color: #e64969;
+}
+
+.engagement > button.reposted {
+  color: #16a36a;
+}
+
+.post-view-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  color: var(--muted-foreground, #777);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Natural image and video proportions */
+.instagram-post-media img,
+.instagram-post-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 680px;
+  object-fit: contain;
+}
+
+@media (max-width: 600px) {
+  .instagram-post-content {
+    padding: 7px 10px 10px;
+  }
+
+  .engagement {
+    gap: 6px 13px;
+  }
+
+  .engagement > button,
+  .post-view-count {
+    font-size: 12px;
+  }
+}
+

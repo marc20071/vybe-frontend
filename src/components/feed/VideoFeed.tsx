@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useFeed } from "@/hooks/useFeed";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { FollowButton } from "@/components/profiles/FollowButton";
 import { SuggestedAccounts } from "@/components/layout/SuggestedAccounts";
 import { FloatingChat } from "@/components/messaging/FloatingChat";
+import { postsApi } from "@/services/posts-api";
 
 function formatPostDate(date: string) {
   const timestamp = new Date(date).getTime();
@@ -19,7 +20,7 @@ function formatPostDate(date: string) {
 
   const minutes = Math.max(
     0,
-    Math.floor((Date.now() - timestamp) / 60000)
+    Math.floor((Date.now() - timestamp) / 60000),
   );
 
   if (minutes < 1) return "Just now";
@@ -34,15 +35,118 @@ function formatPostDate(date: string) {
   return new Date(date).toLocaleDateString();
 }
 
+/**
+ * Records one authenticated view after at least 50% of the
+ * post has remained visible for one second.
+ *
+ * The backend must enforce one view per account per post.
+ */
+function PostViewTracker({ postId }: { postId: string }) {
+  const elementRef = useRef<HTMLDivElement>(null);
+  const sentRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const element = elementRef.current;
+
+    if (!element || sentRef.current) return;
+
+    if (!("IntersectionObserver" in window)) return;
+
+    let active = true;
+
+    const clearDwellTimer = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+
+        if (!entry) return;
+
+        const visible =
+          entry.isIntersecting &&
+          entry.intersectionRatio >= 0.5;
+
+        if (!visible) {
+          clearDwellTimer();
+          return;
+        }
+
+        if (timerRef.current || sentRef.current) return;
+
+        timerRef.current = setTimeout(() => {
+          timerRef.current = null;
+
+          if (!active || sentRef.current) return;
+
+          sentRef.current = true;
+
+          void postsApi
+            .recordView(postId)
+            .then((result) => {
+              if (!active) return;
+
+              window.dispatchEvent(
+                new CustomEvent("vybe:post-view-count", {
+                  detail: {
+                    postId,
+                    viewCount: result.viewCount,
+                  },
+                }),
+              );
+            })
+            .catch((error) => {
+              // Permit another attempt if the request failed.
+              sentRef.current = false;
+
+              console.error(
+                "Could not record post view:",
+                error,
+              );
+            });
+        }, 1000);
+      },
+      {
+        threshold: [0, 0.5, 1],
+      },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      active = false;
+      observer.disconnect();
+      clearDwellTimer();
+    };
+  }, [postId]);
+
+  return (
+    <div
+      ref={elementRef}
+      className="post-view-tracker"
+      aria-hidden="true"
+    />
+  );
+}
+
 export function VideoFeed({
   initialTab = "For you",
 }: {
   initialTab?: "For you" | "Following";
 }) {
-  const [tab, setTab] = useState<"For you" | "Following">(initialTab);
+  const [tab, setTab] = useState<"For you" | "Following">(
+    initialTab,
+  );
+
   const { user, requireAuth } = useAuth();
 
-  const mode = tab === "Following" ? "following" : "for-you";
+  const mode =
+    tab === "Following" ? "following" : "for-you";
 
   const {
     items,
@@ -60,11 +164,32 @@ export function VideoFeed({
         .map((post) => ({
           username: post.username || "",
           displayName:
-            post.displayName || post.username || "VYBE creator",
+            post.displayName ||
+            post.username ||
+            "VYBE creator",
           avatarUrl: post.avatarUrl,
         })),
-    [items]
+    [items],
   );
+
+  // Refresh the feed when a post is deleted.
+  useEffect(() => {
+    const handlePostDeleted = () => {
+      void refresh();
+    };
+
+    window.addEventListener(
+      "vybe:post-deleted",
+      handlePostDeleted,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "vybe:post-deleted",
+        handlePostDeleted,
+      );
+    };
+  }, [refresh]);
 
   function changeTab(nextTab: "For you" | "Following") {
     if (nextTab === "Following" && !user) {
@@ -80,16 +205,21 @@ export function VideoFeed({
       <section className="feed-column">
         <div className="feed-toolbar">
           <div className="feed-tabs">
-            {(["For you", "Following"] as const).map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={`feed-tab ${tab === item ? "active" : ""}`}
-                onClick={() => changeTab(item)}
-              >
-                {item}
-              </button>
-            ))}
+            {(["For you", "Following"] as const).map(
+              (item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={`feed-tab ${
+                    tab === item ? "active" : ""
+                  }`}
+                  onClick={() => changeTab(item)}
+                  aria-pressed={tab === item}
+                >
+                  {item}
+                </button>
+              ),
+            )}
           </div>
 
           <span className="feed-note">
@@ -117,8 +247,12 @@ export function VideoFeed({
 
         {items.map((post) => {
           const media = post.media?.[0];
+
           const creatorName =
-            post.displayName || post.username || "VYBE user";
+            post.displayName ||
+            post.username ||
+            "VYBE user";
+
           const username = post.username || "user";
 
           return (
@@ -126,6 +260,8 @@ export function VideoFeed({
               className="video-card instagram-post"
               key={post.id}
             >
+              <PostViewTracker postId={post.id} />
+
               <header className="instagram-post-header">
                 <Link
                   href={`/profile/${encodeURIComponent(username)}`}
@@ -139,6 +275,7 @@ export function VideoFeed({
 
                   <span className="instagram-author-meta">
                     <strong>{creatorName}</strong>
+
                     <small>
                       @{username}
                       {post.createdAt
@@ -154,6 +291,17 @@ export function VideoFeed({
                 )}
               </header>
 
+              {post.caption && (
+                <div className="instagram-caption instagram-caption-top">
+                  <Link
+                    href={`/profile/${encodeURIComponent(username)}`}
+                  >
+                    <strong>{username}</strong>
+                  </Link>{" "}
+                  {post.caption}
+                </div>
+              )}
+
               <div className="instagram-post-media">
                 {media?.url ? (
                   media.type === "video" ? (
@@ -162,7 +310,6 @@ export function VideoFeed({
                       src={media.url}
                       poster={media.thumbnailUrl}
                       controls
-                      autoPlay
                       muted
                       playsInline
                       loop
@@ -193,21 +340,21 @@ export function VideoFeed({
               <div className="instagram-post-content">
                 <PostActions
                   postId={post.id}
+                  authorId={post.userId}
                   likes={post.likeCount}
                   comments={post.commentCount}
                   shares={0}
+                  viewCount={post.viewCount ?? 0}
+                  repostCount={post.repostCount ?? 0}
                   viewerHasLiked={post.viewerHasLiked}
                   viewerHasSaved={post.viewerHasSaved}
+                  viewerHasReposted={post.viewerHasReposted}
+                  onDeleted={() => {
+                    window.dispatchEvent(
+                      new CustomEvent("vybe:post-deleted"),
+                    );
+                  }}
                 />
-
-                <div className="instagram-caption">
-                  <Link
-                    href={`/profile/${encodeURIComponent(username)}`}
-                  >
-                    <strong>{username}</strong>
-                  </Link>{" "}
-                  {post.caption || "A moment on VYBE."}
-                </div>
               </div>
             </article>
           );
@@ -262,11 +409,15 @@ export function VideoFeed({
         )}
       </section>
 
-      <div className="feed-right-column">
-        <SuggestedAccounts creators={creators} />
-      </div>
+      <aside className="feed-right-column feed-sidebar-stack">
+        <section className="feed-suggested-section">
+          <SuggestedAccounts creators={creators} />
+        </section>
 
-      <FloatingChat />
+        <section className="feed-quick-messages-section">
+          <FloatingChat />
+        </section>
+      </aside>
     </div>
   );
 }
